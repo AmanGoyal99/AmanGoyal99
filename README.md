@@ -11,7 +11,7 @@ I am mainly interested in the intersection of the following domains with AI:
 4. AI in Healthcare 🏥
 5. Robotics 🤖
 
-[![Aman's GitHub stats](https://github-readme-stats.vercel.app/api?username=AmanGoyal99)](https://github.com/anuraghazra/github-readme-stats)
+[![Aman's GitHub stats](https://github-readme-stats.vercel.app/api?username=AmanGoyal99&count_private=true)](https://github.com/anuraghazra/github-readme-stats)
 
 
 Feel free to reach out to me by my [email](aman.goyal1099@gmail.com) or drop a message on [Linkedin](https://www.linkedin.com/in/amangoyal99/)
