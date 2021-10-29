@@ -21,12 +21,12 @@ Feel free to explore my repositories as they contain some cool projects such as 
 
 [![Aman's GitHub stats](https://github-readme-stats.vercel.app/api?username=AmanGoyal99&count_private=true&&hide=prs)](https://github.com/anuraghazra/github-readme-stats)
 
-
-
-Feel free to reach out to me by my [email](aman.goyal1099@gmail.com) or drop a message on [Linkedin](https://www.linkedin.com/in/amangoyal99/)
-
-
-
+Feel free to reach out to me on these :
+    <br>
+    <div align="center">
+    <a href="mailto:aman,goyal1099@gmail.com"><img height="35" src="https://raw.githubusercontent.com/AmanGoyal99/SuperTinyIcons/master/images/svg/gmail.svg"></a>&nbsp;&nbsp;
+    <a href="https://linkedin.com/in/amangoyal99"><img height="35" src="https://raw.githubusercontent.com/AmanGoyal99/SuperTinyIcons/master/images/svg/linkedin.svg"></a>&nbsp;&nbsp;
+  </div>
 
 <!--
 **AmanGoyal99/AmanGoyal99** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
