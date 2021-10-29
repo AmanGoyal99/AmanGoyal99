@@ -13,11 +13,11 @@ I am mainly interested in the intersection of the following domains with AI:
 
 Feel free to explore my repositories as they contain some cool projects such as :
 
-- [Intrusion Detection in Low Light Settings](https://github.com/AmanGoyal99/Low-light-intrusion-detection) 
-- [Deep learning based COVID-19 Classifier](https://github.com/AmanGoyal99/COVID-19-Classifier)
-- [Facial Images Denoising using Autoencoders](https://github.com/AmanGoyal99/Denoising-Images-with-Autoencoders)
-- [Multimodal Emotion Recognition](https://github.com/AmanGoyal99/Multimodal-Emotion-Recognition)
-- [My Computer Vision Webinars](https://github.com/AmanGoyal99/Computer-Vision-Webinar)
+- [Intrusion Detection in Low Light Settings](https://github.com/AmanGoyal99/Low-light-intrusion-detection) 🔅
+- [Deep learning based COVID-19 Classifier](https://github.com/AmanGoyal99/COVID-19-Classifier) 🏥
+- [Facial Images Denoising using Autoencoders](https://github.com/AmanGoyal99/Denoising-Images-with-Autoencoders) 🤓
+- [Multimodal Emotion Recognition](https://github.com/AmanGoyal99/Multimodal-Emotion-Recognition) 📷 👂 
+- [My Computer Vision Webinars](https://github.com/AmanGoyal99/Computer-Vision-Webinar) 👨‍🏫
 
 [![Aman's GitHub stats](https://github-readme-stats.vercel.app/api?username=AmanGoyal99&count_private=true&&hide=prs)](https://github.com/anuraghazra/github-readme-stats)
 
