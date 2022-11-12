@@ -1,7 +1,7 @@
 ### Hi there 👋
 
 This is Aman Goyal and I am recent CS undergraduate student 👨‍🎓 from NIT Kurukshetra. I strongly believe that AI 🤖 can play a huge role in solving some of the biggest problems in the world 🌏. My research interests revolve around deep learning and computer vision.
-Currently I am assosciated with CMU, MSU and IIIT-Hyderabad for research projects. 
+Currently I am working as an AI Research Engineer at Intel. Previously, I have been assosciated with CMU, MSU and IIIT-Hyderabad for research projects. 
 
 I am mainly interested in the intersection of the following domains with AI:
 
