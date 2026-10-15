@@ -47,8 +47,12 @@ early reason to share. All the numbers are in `UnicornRush/Model/GameData.swift`
 
 ## Play it now on your iPhone (web version)
 
-`web/index.html` is a single-file port of the whole game (same economy, pitch, skills, trophies,
-Exit, streaks, offline earnings and Founder Card). Open it in Safari on your iPhone, tap **Share →
+`web/index.html` is the hands-on version, in the style of *My Pizza Ready* / *My Hotel*: drag
+anywhere to walk your founder, grab stacks of product from machines, carry them to counters where
+customers queue and pay, scoop up the cash piles, and stand on glowing floor spots to build new
+desks, hire interns, and upgrade your bag and sneakers. The last spot raises your next round and
+moves you to a bigger office (Garage → Coworking → Loft → Tower → Campus → Mars HQ). The native
+SwiftUI app below still uses the earlier tap-to-earn design. Open it in Safari on your iPhone, tap **Share →
 Add to Home Screen**, and it launches full-screen like an app. Progress is saved in that browser.
 
 ## Running the native app
