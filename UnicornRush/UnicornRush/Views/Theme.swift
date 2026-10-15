@@ -93,11 +93,12 @@ struct ConfettiView: View {
                 ZStack {
                     ForEach(pieces) { p in
                         let local = max(0, t - p.delay)
+                        let px = CGFloat(p.x) * geo.size.width + CGFloat(sin(local * 3 + p.x * 10)) * 20
+                        let py = CGFloat(local * p.speed) * geo.size.height * 0.8 - 30
                         Text(emojis[p.id % emojis.count])
                             .font(.system(size: 26))
                             .rotationEffect(.radians(p.spin * local))
-                            .position(x: p.x * geo.size.width + sin(local * 3 + p.x * 10) * 20,
-                                      y: -30 + local * p.speed * geo.size.height * 0.8)
+                            .position(x: px, y: py)
                             .opacity(local > 2.2 ? 0 : 1)
                     }
                 }

@@ -88,14 +88,19 @@ enum Format {
 
     static func number(_ value: Double) -> String {
         guard value.isFinite else { return "∞" }
-        if value < 1_000 {
+        if value < 999.5 {
             return value < 10 && value != value.rounded()
                 ? String(format: "%.1f", value)
                 : String(format: "%.0f", value)
         }
         var tier = Int(log10(value) / 3)
         tier = min(tier, suffixes.count - 1)
-        let scaled = value / pow(1_000, Double(tier))
+        var scaled = value / pow(1_000, Double(tier))
+        // Avoid "1000K" when rounding pushes into the next unit.
+        if scaled >= 999.5 && tier < suffixes.count - 1 {
+            tier += 1
+            scaled /= 1_000
+        }
         let digits = scaled >= 100 ? "%.0f" : (scaled >= 10 ? "%.1f" : "%.2f")
         return String(format: digits, scaled) + suffixes[tier]
     }
