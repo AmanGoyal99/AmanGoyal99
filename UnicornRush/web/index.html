@@ -4,17 +4,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Unicorn Rush">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: full-screen canvas office (camera follows the founder), slim HUD pinned top, hint pinned bottom. */
+/* Layout: full-screen canvas map of SF (camera follows you); HUD pinned top, objective pinned bottom. */
 :root {
-  --night: #12082a;
-  --ink: #f6f1ff;
-  --ink-dim: rgba(246,241,255,.62);
+  --night: #101826;
+  --ink: #f4f1ff;
+  --ink-dim: rgba(244,241,255,.62);
   --pink: #fa57e5;
   --violet: #8c5cff;
   --gold: #ffcc40;
   --cash: #72ff8c;
+  --red: #ff6b6b;
   --display: "Fredoka", "Arial Rounded MT Bold", ui-rounded, system-ui, sans-serif;
   --body: "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
   color-scheme: dark;
@@ -28,29 +29,33 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 
 .hud { position: fixed; z-index: 10; left: 0; right: 0; top: 0; pointer-events: none;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
-  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
-.chip { pointer-events: auto; background: rgba(10,5,28,.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 7px 12px; display: flex; align-items: center; gap: 6px; }
-.money { font-family: var(--display); font-size: 21px; color: var(--cash); font-variant-numeric: tabular-nums; min-width: 92px; }
+  padding: calc(8px + env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 6px; }
+.hrow { display: flex; gap: 6px; align-items: stretch; }
+.chip { pointer-events: auto; background: rgba(8,12,24,.84); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 6px 10px; }
+.cashchip { min-width: 100px; flex: none; display: flex; flex-direction: column; justify-content: center; }
+.money { font-family: var(--display); font-size: 20px; color: var(--cash); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.money.neg { color: var(--red); }
 .money.bump { animation: bump .25s; }
-@keyframes bump { 50% { transform: scale(1.12) } }
-.lvl { flex-direction: column; align-items: stretch; gap: 4px; border-radius: 16px; padding: 6px 12px; min-width: 0; }
-.lvl .top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; white-space: nowrap; }
-.lvl .top b { font-family: var(--display); font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
-.lvl .top span { color: var(--pink); }
-.bar { height: 7px; border-radius: 7px; background: rgba(255,255,255,.12); overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--pink), var(--violet)); border-radius: 7px; transition: width .3s; }
-.card-btn { width: 46px; height: 46px; justify-content: center; padding: 0; font-size: 22px; position: relative; }
+@keyframes bump { 50% { transform: scale(1.1) } }
+.cashchip small { font-size: 10.5px; color: var(--ink-dim); white-space: nowrap; }
+.cashchip small.warn { color: var(--red); }
+.goal { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+.goal .t { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: var(--ink-dim); white-space: nowrap; }
+.goal .t b { font-family: var(--display); font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+.reqs { display: flex; gap: 8px; white-space: nowrap; overflow: hidden; font-size: 12px; font-variant-numeric: tabular-nums; }
+.reqs span.ok { color: var(--cash); }
+.card-btn { width: 46px; display: grid; place-items: center; font-size: 22px; position: relative; padding: 0; }
 .card-btn small { position: absolute; bottom: -4px; right: -4px; background: var(--violet); border-radius: 9px; font-size: 10px; padding: 1px 6px; font-family: var(--display); }
+.stats { display: flex; gap: 6px; }
+.stats .chip { flex: 1; padding: 4px 6px; text-align: center; font-size: 12.5px; font-family: var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.buff { align-self: center; background: linear-gradient(135deg, var(--gold), #ff8a1f); color: #1a0d00; border-radius: 999px; padding: 4px 12px; font-family: var(--display); font-size: 13px; }
 
-.hint { position: fixed; z-index: 10; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-  max-width: calc(100% - 32px); width: max-content; text-align: center; pointer-events: none;
-  background: rgba(10,5,28,.85); border: 1.5px solid var(--gold); border-radius: 999px; padding: 10px 18px; font-size: 15px; }
-.viral { position: fixed; z-index: 10; left: 50%; transform: translateX(-50%); top: calc(70px + env(safe-area-inset-top, 0px));
-  background: linear-gradient(135deg, var(--gold), #ff8a1f); color: #1a0d00; border-radius: 999px; padding: 6px 14px; font-family: var(--display); font-size: 15px; pointer-events: none; }
-
-.toast { position: fixed; z-index: 60; left: 50%; top: calc(118px + env(safe-area-inset-top,0px)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px);
+.hint { position: fixed; z-index: 10; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  max-width: calc(100% - 28px); width: max-content; text-align: center; pointer-events: none;
+  background: rgba(8,12,24,.88); border: 1.5px solid var(--gold); border-radius: 999px; padding: 10px 18px; font-size: 14.5px; text-wrap: balance; }
+.toast { position: fixed; z-index: 35; left: 50%; top: calc(132px + env(safe-area-inset-top,0px)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px);
   padding: 9px 16px; border-radius: 999px; background: rgba(8,4,20,.92); border: 1.5px solid var(--pink); font-size: 14px; text-align: center; pointer-events: none; animation: drop .3s cubic-bezier(.3,1.5,.5,1); }
 @keyframes drop { from { transform: translate(-50%,-24px); opacity: 0 } }
 
@@ -58,11 +63,11 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   padding: calc(20px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px));
   background: rgba(4,2,14,.78); }
 .modal { width: min(400px,100%); max-height: 100%; overflow-y: auto; border-radius: 28px; padding: 24px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center;
-  border: 2px solid transparent; background: linear-gradient(#1b0e3a,#1b0e3a) padding-box, linear-gradient(135deg,var(--pink),var(--violet),var(--gold)) border-box;
+  border: 2px solid transparent; background: linear-gradient(#141c30,#141c30) padding-box, linear-gradient(135deg,var(--pink),var(--violet),var(--gold)) border-box;
   animation: popin .35s cubic-bezier(.3,1.5,.5,1); }
 @keyframes popin { from { transform: scale(.8); opacity: 0 } }
-.modal .em { font-size: 72px; line-height: 1; }
-.modal h2 { margin: 0; font-family: var(--display); font-size: 27px; text-wrap: balance; }
+.modal .em { font-size: 70px; line-height: 1; }
+.modal h2 { margin: 0; font-family: var(--display); font-size: 26px; text-wrap: balance; }
 .modal p { margin: 0; font-size: 15px; color: var(--ink-dim); text-wrap: balance; }
 .grad { background: linear-gradient(90deg,var(--pink),var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .modal input { width: 100%; padding: 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: var(--ink); font: 700 22px var(--display); text-align: center; -webkit-user-select: text; user-select: text; }
@@ -77,122 +82,177 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .row2 { display: flex; gap: 8px; width: 100%; }
 .row2 .btn { flex: 1; font-size: 16px; }
 .share-img { width: min(230px,66vw); border-radius: 18px; -webkit-user-select: auto; user-select: auto; -webkit-touch-callout: default; }
-.stats { width: 100%; display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
-.stats div { background: rgba(255,255,255,.06); border-radius: 14px; padding: 8px 4px; }
-.stats b { display: block; font-family: var(--display); font-size: 17px; }
-.stats small { font-size: 11px; color: var(--ink-dim); }
+.grid3 { width: 100%; display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.grid3 div { background: rgba(255,255,255,.06); border-radius: 14px; padding: 8px 4px; }
+.grid3 b { display: block; font-family: var(--display); font-size: 16px; }
+.grid3 small { font-size: 11px; color: var(--ink-dim); }
+
+.pitch { position: fixed; inset: 0; z-index: 50; background: radial-gradient(100% 70% at 50% 20%, #1f3a2a, #0b1410);
+  display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+  padding: calc(16px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px)); }
+.pitch .leave { align-self: flex-start; color: var(--ink-dim); font-size: 15px; padding: 4px 0; }
+.pitch h2 { margin: 0; font-family: var(--display); font-size: 27px; }
+.investor { font-size: 80px; line-height: 1; }
+.quote { font-size: 17px; max-width: 34ch; text-wrap: balance; }
+.dots { display: flex; gap: 12px; }
+.dots i { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.12); transition: background .2s; }
+.dots i.on { background: var(--cash); box-shadow: 0 0 14px var(--cash); }
+.meter { width: 100%; max-width: 420px; height: 58px; border-radius: 14px; background: rgba(255,255,255,.1); position: relative; }
+.meter .zone { position: absolute; top: 0; bottom: 0; border-radius: 12px; background: rgba(114,255,140,.7); transition: left .25s cubic-bezier(.3,1.4,.5,1); }
+.meter .needle { position: absolute; top: -4px; bottom: -4px; width: 6px; margin-left: -3px; border-radius: 3px; background: #fff; box-shadow: 0 0 10px #fff; }
+.meter.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-9px) } 75% { transform: translateX(9px) } }
+.feedback { font-family: var(--display); font-size: 19px; min-height: 28px; }
+.pitch .go { margin-top: auto; width: 100%; max-width: 420px; padding: 24px; border-radius: 26px; font-family: var(--display); font-size: 30px; }
 .confetti { position: fixed; inset: 0; z-index: 45; pointer-events: none; overflow: hidden; }
 .confetti span { position: absolute; top: -40px; font-size: 26px; animation: fall linear forwards; }
 @keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(var(--r)); } }
 @media (prefers-reduced-motion: reduce) { .confetti { display: none; } }
 </style>
 
-<canvas id="game" aria-label="Your office. Drag anywhere to walk."></canvas>
+<canvas id="game" aria-label="San Francisco. Drag anywhere to walk."></canvas>
 <div class="hud">
-  <div class="chip money" id="money">$0</div>
-  <div class="chip lvl"><div class="top"><b id="office">Garage</b><span id="round">→ Pre-Seed</span></div><div class="bar"><i id="prog"></i></div></div>
-  <button class="chip card-btn" data-act="card" aria-label="Founder Card">✨<small id="flv">1</small></button>
+  <div class="hrow">
+    <div class="chip cashchip"><div class="money" id="money">$0</div><small id="rent">Rent in 0:60</small></div>
+    <div class="chip goal"><div class="t"><b id="goalName">Pre-Seed</b><span id="month">Month 1</span></div><div class="reqs" id="reqs"></div></div>
+    <button class="chip card-btn" data-act="card" aria-label="Founder Card">✨<small id="flv">1</small></button>
+  </div>
+  <div class="stats">
+    <div class="chip" id="sCust">👥 0</div><div class="chip" id="sFol">📣 0</div><div class="chip" id="sMrr">💳 $0/mo</div><div class="chip" id="sVer">🧩 v0.0</div>
+  </div>
+  <div class="buff" id="buff" hidden></div>
 </div>
-<div class="viral" id="viral" hidden>🦄 VIRAL! 2x prices <span id="viralT"></span></div>
 <div class="hint" id="hint" hidden></div>
 
 <script>
-// ---------- Content ----------
-const T = 48, WW = 8*T;
-const PRODUCTS = [
-  { e:"☕️", n:"Coffee",  m:"Coffee Bar",    base:4,  col:"#7a4a2a" },
-  { e:"📱", n:"App",     m:"Code Desk",     base:9,  col:"#2f5bd8" },
-  { e:"🎨", n:"Design",  m:"Design Studio", base:18, col:"#c2399b" },
-  { e:"📣", n:"Ad",      m:"Growth Lab",    base:32, col:"#d8662f" },
-  { e:"🤖", n:"AI Model",m:"AI Lab",        base:55, col:"#2fa58d" },
-  { e:"🚀", n:"Rocket",  m:"Launch Pad",    base:90, col:"#5b3fd8" },
-];
-const OFFICES = [
-  { name:"Garage",          round:"Pre-Seed",  floor:"#3a2a52", tile:"#40305a" },
-  { name:"Coworking Desk",  round:"Seed",      floor:"#2a3550", tile:"#303c58" },
-  { name:"Startup Loft",    round:"Series A",  floor:"#43304a", tile:"#4a3552" },
-  { name:"Office Tower",    round:"Series B",  floor:"#253f45", tile:"#2b474d" },
-  { name:"Tech Campus",     round:"IPO",       floor:"#3c2e5e", tile:"#443468" },
-  { name:"Mars HQ",         round:"Galactic",  floor:"#5a2f2a", tile:"#643631" },
-];
-const TITLES = [[1,"Wantrepreneur"],[3,"Side Hustler"],[6,"Builder"],[10,"Operator"],[15,"Rainmaker"],[20,"Visionary"],[30,"Titan"],[40,"Legend"],[50,"GOAT"]];
-const FACES = ["🙂","😀","🤓","😊","🧐","😃","🥸","😺"];
-const SKIN = ["#f6c89f","#e0a77a","#b97a4e","#8a5634","#ffd9b8","#c98d63"];
-const SHIRT = ["#4da3ff","#ff6b6b","#ffd166","#06d6a0","#b388ff","#ff9f43","#48dbfb"];
+// ================= World layout (tiles) =================
+const T = 44, COLS = 10, ROWS = 22.4, WW = COLS*T, WH = ROWS*T;
+const R = (x,y,w,h) => ({x:x*T, y:y*T, w:w*T, h:h*T, cx:(x+w/2)*T, cy:(y+h/2)*T});
+const LOC = {
+  home:    { ...R(.35,2.5,4.4,3.5),  name:"Hacker House", sub:"Lower Haight", emoji:"🏠", col:"#6b4e8a" },
+  coffee:  { ...R(6.0,2.5,3.65,3.5), name:"Coffee Shop",  sub:"Valencia St",  emoji:"☕️", col:"#8a5a3c" },
+  park:    { ...R(.35,7.1,4.4,3.9),  name:"Dolores Park", sub:"post to socials", emoji:"🌳", col:"#2f7d4f" },
+  venue:   { ...R(6.0,7.1,3.65,3.9), name:"Event Space",  sub:"SoMa",         emoji:"🎤", col:"#3a3f8a" },
+  office:  { ...R(.35,12.3,4.4,4.5), name:"Your Office",  sub:"SoMa loft",    emoji:"🏢", col:"#2f5f7d", unlock:1 },
+  scooter: { ...R(6.0,12.3,3.65,2.0),name:"Scooter Dock", sub:"",             emoji:"🛴", col:"#4d6b2f", unlock:1 },
+  board:   { ...R(6.0,14.8,3.65,2.0),name:"Billboard on 101", sub:"",         emoji:"📺", col:"#8a3c5a", unlock:2 },
+  sand:    { ...R(.9,18.2,8.2,3.6),  name:"Sand Hill Road", sub:"where the VCs are", emoji:"🏦", col:"#5e6b2f" },
+};
+const DESK  = { x:1.45*T, y:4.75*T };
+const POST  = { x:2.55*T, y:9.3*T };
+const BOARD = { x:7.85*T, y:15.95*T };
+const SHELF = { x:1.35*T, y:14.0*T };
+const PITCH = { x:5.0*T,  y:20.2*T };
+const HSTREETS = [1.95, 6.55, 11.65, 17.5].map(v=>v*T), VSTREET = 5.38*T;
 
-// ---------- Save ----------
-const SAVE_KEY = "unicornrush.walk.v1";
-const fresh = () => ({ name:"", logo:"🦄", onboarded:false, L:0, cash:0, built:[], xp:0, lvl:1, life:0, sold:0, raised:0, unicorns:0, moved:false });
-function load(){ try { const r = localStorage.getItem(SAVE_KEY); if (r) return Object.assign(fresh(), JSON.parse(r)); } catch(e){} return null; }
+// ================= Content =================
+const ROUNDS = [
+  { name:"Pre-Seed", cust:8,     intros:1, fol:0,     raise:250e3, val:3e6,   line:"“So it's like Uber, but for… what exactly?”" },
+  { name:"Seed",     cust:60,    intros:2, fol:600,   raise:2e6,   val:15e6,  line:"“Love the energy. Show me retention.”" },
+  { name:"Series A", cust:1000,  intros:3, fol:8000,  raise:12e6,  val:80e6,  line:"“What happens when Google builds this?”" },
+  { name:"Series B", cust:12000, intros:4, fol:80000, raise:50e6,  val:400e6, line:"“Unit economics. Go.”" },
+  { name:"Series C", cust:70000, intros:5, fol:400000,   raise:150e6, val:1.5e9, line:"“A unicorn? Prove it's not a horse in a party hat.”" },
+  { name:"IPO",      cust:350000, intros:6, fol:2e6,   raise:800e6, val:12e9,  line:"“The whole market is watching. Ring the bell.”" },
+];
+function roundDef(i){
+  if (i < ROUNDS.length) return ROUNDS[i];
+  const k = i - ROUNDS.length + 1, b = ROUNDS[ROUNDS.length-1];
+  return { name:`Moonshot ${k}`, cust:b.cust*Math.pow(5,k), intros:6, fol:b.fol*Math.pow(5,k), raise:b.raise*Math.pow(4,k), val:b.val*Math.pow(4,k), line:"“Mars has no competitors yet.”" };
+}
+const TITLES = [[1,"Broke in SF"],[3,"Side Hustler"],[6,"Indie Hacker"],[10,"Builder"],[15,"Operator"],[20,"Rainmaker"],[30,"Visionary"],[40,"Titan"],[50,"GOAT"]];
+const CODE = ["add stripe checkout","fix the login bug","build onboarding flow","add dark mode","ship mobile app","write the API","add AI search","cut page load 3x","add team invites","build analytics dashboard","refactor the backend","add Slack integration","launch referral program","add SSO for enterprise","scale the database"];
+const POSTS = ["just shipped","building in public, day","we're live!","new feature drop","what users are saying","behind the scenes"];
+const EVENTS = [
+  { name:"Founder Mixer", emoji:"🍻", people:9, vcs:1, hack:false },
+  { name:"AI Hackathon",  emoji:"💻", people:5, vcs:0, hack:true },
+  { name:"VC Brunch",     emoji:"🥂", people:5, vcs:3, hack:false, minRound:1 },
+  { name:"Demo Day",      emoji:"🎤", people:7, vcs:2, hack:false, minRound:2 },
+];
+const SKIN = ["#f6c89f","#e0a77a","#b97a4e","#8a5634","#ffd9b8","#c98d63"];
+const SHIRT = ["#4da3ff","#ff6b6b","#ffd166","#06d6a0","#b388ff","#ff9f43","#48dbfb","#a0a0b0"];
+const FACES = ["🙂","😀","🤓","😊","🧐","😃","🥸","🤔"];
+
+// ================= Save =================
+const SAVE_KEY = "unicornrush.sf.v1";
+const fresh = () => ({ name:"", logo:"🦄", onboarded:false, moved:false,
+  cash:80, life:0, month:1, monthT:0, features:0, followers:0, customers:0, intros:0, contacts:0,
+  rounds:0, valuation:0, posts:0, virals:0, events:0,
+  up:{ claude:0, monitor:0, bag:0, scooter:0, office:0 }, hires:{ eng:0, mkt:0, sales:0 },
+  shelf:0, xp:0, lvl:1, firstPost:false, firstCustomer:false });
+function load(){ try { const r = localStorage.getItem(SAVE_KEY); if (r) { const d = JSON.parse(r); const f = fresh(); return Object.assign(f, d, { up:Object.assign(f.up, d.up||{}), hires:Object.assign(f.hires, d.hires||{}) }); } } catch(e){} return null; }
 function save(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch(e){} }
 let S = load() || fresh();
 
-// ---------- Helpers ----------
-const SUF = ["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];
+// ================= Helpers =================
+const SUF = ["","K","M","B","T","Qa","Qi"];
 function num(v){
-  if (v < 999.5) return Math.round(v).toString();
-  let t = Math.min(Math.floor(Math.log10(v)/3), SUF.length-1), s = v/Math.pow(1000,t);
-  if (s >= 999.5 && t < SUF.length-1) { t++; s /= 1000; }
-  return (s>=100 ? s.toFixed(0) : s>=10 ? s.toFixed(1) : s.toFixed(2)) + SUF[t];
+  const neg = v < 0; v = Math.abs(v);
+  let out;
+  if (v < 999.5) out = Math.round(v).toString();
+  else { let t = Math.min(Math.floor(Math.log10(v)/3), SUF.length-1), s = v/Math.pow(1000,t); if (s >= 999.5 && t < SUF.length-1) { t++; s /= 1000; } out = (s>=100 ? s.toFixed(0) : s>=10 ? s.toFixed(1) : s.toFixed(2)) + SUF[t]; }
+  return (neg ? "-" : "") + out;
 }
-const money = v => "$"+num(v);
+const money = v => (v<0?"-$":"$") + num(Math.abs(v));
 const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $ = id => document.getElementById(id);
 const rnd = (a,b) => a + Math.random()*(b-a);
 const pick = a => a[Math.floor(Math.random()*a.length)];
 const dist = (a,b,x,y) => Math.hypot(a-x, b-y);
-const office = L => OFFICES[Math.min(L, OFFICES.length-1)];
-const officeName = L => office(L).name + (L >= OFFICES.length ? ` ${L-OFFICES.length+2}` : "");
-const roundName = L => L < OFFICES.length ? office(L).round : `Galactic ${L-OFFICES.length+2}`;
+const inRect = (p, r) => p.x > r.x && p.x < r.x+r.w && p.y > r.y && p.y < r.y+r.h;
 const xpNeed = l => 30*Math.pow(l,1.5);
 const title = () => { let t="Founder"; for (const [l,n] of TITLES) if (S.lvl>=l) t=n; return t; };
+const version = () => `v${Math.floor(S.features/10)}.${S.features%10}`;
+const unlocked = loc => !loc.unlock || S.rounds >= loc.unlock;
 
-// ---------- Level (office) layout ----------
-let W; // world state for current office
-function buildLevel(){
-  const L = S.L, k = Math.min(L+2, PRODUCTS.length);
-  const price = i => Math.round(PRODUCTS[i].base*Math.pow(1.8, L));
-  const lanes = [];
-  for (let i=0;i<k;i++) {
-    const y = (1.7 + 3*i)*T;
-    lanes.push({ i, p:PRODUCTS[i], price:price(i), y, mx:1.25*T, cx:4.35*T,
-      open:false, mStack:0, mTimer:0, cStack:0, cash:0, queue:[], workers:[] });
-  }
-  const seq = [{type:"hire",lane:0}];
-  const UP = ["carry","speed","carry","speed","carry"];
-  for (let i=1;i<k;i++) seq.push({type:"lane",lane:i},{type:UP[i-1],lane:i},{type:"hire",lane:i});
-  seq.push({type:"market",lane:k-1},{type:"raise",lane:k-1});
-  const y0 = (3*k + 1.15)*T, H = (3*k + 3.3)*T;
-  const slots = [1.35*T, 3.35*T, 5.35*T]; let b = 0;
-  const MULT = {hire:22, lane:28, carry:18, speed:18, market:30, raise:55};
-  seq.forEach((s,idx)=>{
-    s.id = `${s.type}${idx}`; s.paid = 0;
-    const ln = lanes[s.lane];
-    s.cost = Math.round(MULT[s.type]*ln.price);
-    if (s.type==="lane") { s.x = 2.8*T; s.y = ln.y; s.w = 3.9*T; s.h = 1.25*T; s.label = `${ln.p.e} ${ln.p.m}`; }
-    else if (s.type==="hire") { s.x = 2.8*T; s.y = ln.y + 1.3*T; s.w = 1.6*T; s.h = .85*T; s.label = `🧑‍🎓 Intern`; }
-    else {
-      s.x = slots[b++ % 3]; s.y = y0; s.w = 1.75*T; s.h = 1.1*T;
-      s.label = { carry:"🎒 Bigger bag", speed:"👟 Sneakers", market:"📣 Billboard", raise:`🎤 Raise ${roundName(L)}` }[s.type];
-    }
-    if (S.built.includes(s.id)) s.done = true;
-  });
-  lanes[0].open = true;
-  seq.forEach(s=>{ if (s.done && s.type==="lane") lanes[s.lane].open = true; });
-  W = { L, k, lanes, seq, H, y0, door:{x:7.35*T, y:H-6}, customers:[], floats:[], flyers:[], spawnT:2, unicorn:null, nextUni:performance.now()+40000, viralUntil:0 };
-  seq.forEach(s=>{ if (s.done && s.type==="hire") addWorker(lanes[s.lane]); });
-  P.x = 6.1*T; P.y = Math.min(lanes[0].y + 1.5*T, W.H - T); P.stack = [];
+// ================= Economy =================
+const MONTH = 60; // seconds per in-game month
+const price = () => 25*(1 + 0.03*S.features);
+const mrr = () => S.customers*price();
+const SAL = { eng:9000, mkt:8000, sales:8000 };
+const burn = () => 100 + (S.up.office ? 3000 : 0) + (S.up.claude ? 100 : 0) + S.hires.eng*SAL.eng + S.hires.mkt*SAL.mkt + S.hires.sales*SAL.sales;
+const carryCap = () => 3 + 2*S.up.bag;
+const speed = () => 190*(S.up.scooter ? 1.45 : 1);
+const codeTime = () => 2.6 / ((S.up.claude ? 1.8 : 1) * (S.up.monitor ? 1.3 : 1) * (now() < G.coffeeUntil ? 2 : 1));
+const leadSize = () => Math.max(1, Math.round(Math.sqrt(S.followers/80)));
+const goal = () => roundDef(S.rounds);
+const reqsMet = () => { const r = goal(); return S.customers >= r.cust && S.intros >= r.intros && S.followers >= r.fol; };
+const valuation = () => Math.max(S.valuation, mrr()*12*15);
+
+// ================= Transient state =================
+let G;
+let TOFF = 0;
+const now = () => performance.now() + TOFF;
+function resetWorld(){
+  G = { leads:[], attendees:[], event:null, nextEvent: now() + (S.events===0 ? 50000 : 60000), eventAnnounced:false,
+        floats:[], flyers:[], codeT:0, term:["$ claude", "Ready when you are."], spawnT:3, coffeeUntil:0,
+        salesT:0, engT:0, cooldown:0, pitchHeld:false, fog: Array.from({length:6},()=>({x:rnd(-100,WW), y:rnd(0,WH), s:rnd(8,18), r:rnd(70,140)})) };
 }
-const count = type => W.seq.filter(s=>s.done && s.type===type).length;
-const carryCap = () => 4 + 3*count("carry");
-const speed = () => 210*(1 + 0.18*count("speed"));
-const visibleSpots = () => W.seq.filter(s=>!s.done).slice(0,2);
-function addWorker(lane){ lane.workers.push({ x:lane.mx+.9*T, y:lane.y+.6*T, stack:0, state:"toM", t:0, shirt:pick(SHIRT), skin:pick(SKIN) }); }
+const P = { x:2.55*T, y:6.55*T, stack:0, t:0, bob:0, dir:1 };
 
-// ---------- Player & input ----------
-const P = { x:0, y:0, stack:[], t:0, face:"😎", bob:0, dir:1 };
-const joy = { on:false, ox:0, oy:0, dx:0, dy:0, id:null };
-const keys = {};
+// Walk-on purchase spots
+function spots(){
+  const L = [];
+  const h = LOC.home;
+  if (!S.up.claude)  L.push({ id:"claude",  x:h.x+3.25*T, y:h.y+.85*T, w:1.95*T, h:.85*T, label:"🧠 Claude Max", cost:100, buy(){ S.up.claude = 1; toast("🧠 Claude Max: you ship 1.8x faster"); } });
+  if (!S.up.monitor) L.push({ id:"monitor", x:h.x+3.25*T, y:h.y+1.85*T, w:1.95*T, h:.85*T, label:"🖥️ 2nd monitor", cost:250, buy(){ S.up.monitor = 1; toast("🖥️ Second monitor: +30% coding speed"); } });
+  if (S.up.bag < 3)  L.push({ id:"bag",     x:h.x+3.25*T, y:h.y+2.85*T, w:1.95*T, h:.85*T, label:"🎒 Backpack", cost:[150,3000,60000][S.up.bag], buy(){ S.up.bag++; toast(`🎒 You can carry ${carryCap()} features`); } });
+  const c = LOC.coffee;
+  if (now() >= G.coffeeUntil) L.push({ id:"coffee", x:c.cx, y:c.y+2.5*T, w:2.4*T, h:1*T, label:"☕️ Oat latte", cost:6, repeat:true, buy(){ G.coffeeUntil = now()+30000; toast("☕️ Caffeinated: 2x coding for 30s"); } });
+  if (unlocked(LOC.scooter) && !S.up.scooter) L.push({ id:"scooter", x:LOC.scooter.cx, y:LOC.scooter.cy+.2*T, w:2.6*T, h:.95*T, label:"🛴 E-scooter", cost:1500, buy(){ S.up.scooter = 1; toast("🛴 Zoom. You move 45% faster"); } });
+  const o = LOC.office;
+  if (unlocked(o)) {
+    if (!S.up.office) L.push({ id:"office", x:o.cx, y:o.cy, w:3*T, h:1.2*T, label:"🔑 Lease office", cost:20000, buy(){ S.up.office = 1; toast("🏢 You have an office! Time to hire"); } });
+    else {
+      const H = [["eng","👩‍💻 Engineer"],["mkt","📣 Marketer"],["sales","🤝 Sales rep"]];
+      H.forEach(([k,lab],j)=>{ const n = S.hires[k]; if (n < 5) L.push({ id:"hire-"+k, x:o.x+3.15*T, y:o.y+(1.0+j*1.15)*T, w:2.2*T, h:.95*T, label:lab, cost:5000*(n+1)*(1+S.rounds), sub:`${money(SAL[k])}/mo`, buy(){ S.hires[k]++; toast(`${lab.split(" ")[0]} Hired! (${S.hires[k]}) · burn now ${money(burn())}/mo`); } }); });
+    }
+  }
+  return L;
+}
+const paid = {};
+
+// ================= Input =================
+const joy = { on:false, ox:0, oy:0, dx:0, dy:0, id:null }, keys = {};
 const cv = $("game"), g = cv.getContext("2d");
 cv.addEventListener("pointerdown", e=>{ if (joy.on) return; joy.on=true; joy.id=e.pointerId; joy.ox=e.clientX; joy.oy=e.clientY; joy.dx=joy.dy=0; cv.setPointerCapture(e.pointerId); });
 cv.addEventListener("pointermove", e=>{ if (!joy.on || e.pointerId!==joy.id) return; joy.dx=e.clientX-joy.ox; joy.dy=e.clientY-joy.oy; });
@@ -201,360 +261,502 @@ cv.addEventListener("pointerup", endJoy); cv.addEventListener("pointercancel", e
 addEventListener("keydown", e=>{ keys[e.key.toLowerCase()] = true; });
 addEventListener("keyup", e=>{ keys[e.key.toLowerCase()] = false; });
 
-// ---------- Economy actions ----------
-function gain(v){ S.cash += v; S.life += v; const m=$("money"); m.classList.remove("bump"); void m.offsetWidth; m.classList.add("bump"); }
-function addXP(a){ S.xp += a; while (S.xp >= xpNeed(S.lvl)) { S.xp -= xpNeed(S.lvl); S.lvl++; toast(`⬆️ Founder Level ${S.lvl}: ${title()}`); } }
-function floatText(x,y,text,color){ W.floats.push({x,y,text,color,t:0}); }
-function completeSpot(s){
-  s.done = true; S.built.push(s.id); addXP(10);
-  const ln = W.lanes[s.lane];
-  if (s.type==="lane") { ln.open = true; toast(`${ln.p.e} ${ln.p.m} is open! Customers want ${ln.p.n}s`); }
-  else if (s.type==="hire") { addWorker(ln); toast(`🧑‍🎓 An intern now restocks the ${ln.p.m}`); }
-  else if (s.type==="carry") toast(`🎒 You can carry ${carryCap()} now`);
-  else if (s.type==="speed") toast("👟 You walk faster");
-  else if (s.type==="market") toast("📣 More customers are coming");
-  else if (s.type==="raise") { S.raised++; save(); confetti(); queue({type:"raise"}); return; }
-  confettiSmall(s.x, s.y);
-  save();
+// ================= Actions =================
+function gain(v){ S.cash += v; S.life += Math.max(v,0); const m=$("money"); m.classList.remove("bump"); void m.offsetWidth; m.classList.add("bump"); }
+function addXP(a){ S.xp += a; while (S.xp >= xpNeed(S.lvl)) { S.xp -= xpNeed(S.lvl); S.lvl++; toast(`⬆️ Level ${S.lvl}: ${title()}`); } }
+function floatText(x,y,text,color,size){ G.floats.push({x,y,text,color,size:size||15,t:0}); }
+function sparkle(x,y){ for (let k=0;k<6;k++) G.floats.push({x:x+rnd(-26,26), y:y+rnd(-14,8), text:pick(["✨","⭐️","🎉"]), color:"#fff", size:14, t:rnd(0,.3)}); }
+
+function postFeature(atBoard){
+  const viral = !atBoard && Math.random() < .12;
+  let gainF = atBoard ? 25 + 2.5*Math.sqrt(S.followers) : (8 + 1.2*Math.sqrt(S.followers))*(viral?6:1);
+  gainF = Math.round(gainF);
+  S.followers += gainF; S.posts++; addXP(3);
+  const at = atBoard ? BOARD : POST;
+  if (viral) { S.virals++; toast(`🔥 Your post went VIRAL! +${num(gainF)} followers`); sparkle(at.x, at.y); }
+  floatText(at.x+rnd(-20,20), at.y-30, `❤️ +${num(gainF)}`, "#ff8fd8");
+  if (!S.firstPost) { S.firstPost = true; toast("📣 Launched! Followers will bring leads to the streets"); }
+}
+function closeLead(l){
+  if (S.features === 0) { if (!l.warned) { floatText(l.x, l.y-40, "No product yet 🤷", "#fff", 12); l.warned = true; } return false; }
+  S.customers += l.size; addXP(2 + Math.log2(l.size+1));
+  floatText(l.x, l.y-36, `+${num(l.size)} 💳`, "#72ff8c");
+  if (!S.firstCustomer) { S.firstCustomer = true; toast(`🥹 First paying customer! +${money(price())}/mo`); }
+  return true;
 }
 
-// ---------- Simulation ----------
-function update(dt, now){
-  // Player movement
-  let mx = 0, my = 0;
-  if (joy.on) { const d = Math.hypot(joy.dx, joy.dy); if (d > 6) { const m = Math.min(d, 60)/60; mx = joy.dx/d*m; my = joy.dy/d*m; } }
-  if (keys.w||keys.arrowup) my -= 1; if (keys.s||keys.arrowdown) my += 1; if (keys.a||keys.arrowleft) mx -= 1; if (keys.d||keys.arrowright) mx += 1;
-  const ml = Math.hypot(mx,my); if (ml > 1) { mx/=ml; my/=ml; }
-  if (ml > 0.05) { P.x += mx*speed()*dt; P.y += my*speed()*dt; P.bob += dt*14; if (Math.abs(mx) > .1) P.dir = Math.sign(mx); if (!S.moved) { S.moved = true; } }
-  P.x = Math.max(.45*T, Math.min(WW-.45*T, P.x)); P.y = Math.max(.7*T, Math.min(W.H-.45*T, P.y));
+// ================= Simulation =================
+function update(dt){
+  const t = now();
+  // Move
+  let mx=0,my=0;
+  if (joy.on) { const d=Math.hypot(joy.dx,joy.dy); if (d>6) { const m=Math.min(d,60)/60; mx=joy.dx/d*m; my=joy.dy/d*m; } }
+  if (keys.w||keys.arrowup) my-=1; if (keys.s||keys.arrowdown) my+=1; if (keys.a||keys.arrowleft) mx-=1; if (keys.d||keys.arrowright) mx+=1;
+  const ml = Math.hypot(mx,my); if (ml>1) { mx/=ml; my/=ml; }
+  if (ml>.05) { P.x += mx*speed()*dt; P.y += my*speed()*dt; P.bob += dt*14; if (Math.abs(mx)>.1) P.dir=Math.sign(mx); S.moved = true; }
+  P.x = Math.max(.4*T, Math.min(WW-.4*T, P.x)); P.y = Math.max(1.6*T, Math.min(WH-.4*T, P.y));
   P.t += dt;
 
-  const viral = now < W.viralUntil;
-  for (const ln of W.lanes) {
-    if (!ln.open) continue;
-    // Machine produces stock
-    if (ln.mStack < 8) { ln.mTimer += dt; if (ln.mTimer >= 1.5) { ln.mTimer = 0; ln.mStack++; } } else ln.mTimer = 0;
-    // Player picks up from machine tray
-    if (dist(P.x,P.y, ln.mx+.95*T, ln.y) < .8*T && ln.mStack > 0 && P.stack.length < carryCap() && P.t > .09) { ln.mStack--; P.stack.push(ln.i); P.t = 0; }
-    // Player drops matching items on the counter
-    if (dist(P.x,P.y, ln.cx-.95*T, ln.y) < .8*T && ln.cStack < 24 && P.t > .07) {
-      const k = P.stack.lastIndexOf(ln.i); if (k >= 0) { P.stack.splice(k,1); ln.cStack++; P.t = 0; }
+  // Money: MRR streams in, burn is charged monthly
+  gain(mrr()/MONTH*dt);
+  S.monthT += dt;
+  if (S.monthT >= MONTH) {
+    S.monthT = 0; S.month++;
+    const b = burn(); S.cash -= b;
+    toast(S.cash < 0 ? `😬 Month ${S.month}: can't cover ${money(b)} of rent & payroll` : `📅 Month ${S.month}: paid ${money(b)} rent & payroll`);
+  }
+
+  // Claude Code at your desk
+  const atDesk = dist(P.x,P.y,DESK.x,DESK.y+.6*T) < .95*T;
+  if (atDesk && P.stack < carryCap()) {
+    G.codeT += dt;
+    if (G.codeT >= codeTime()) {
+      G.codeT = 0; P.stack++; S.features++; addXP(1);
+      G.term.push(`> ${pick(CODE)}`, `✓ shipped ${version()}`); if (G.term.length > 4) G.term.splice(0, G.term.length-4);
+      floatText(DESK.x, DESK.y-20, "🧩", "#fff", 18);
     }
-    // Player collects cash
-    if (ln.cash > 0 && dist(P.x,P.y, ln.cx, ln.y+1.15*T) < .85*T) {
-      const n = Math.min(10, Math.ceil(ln.cash / (ln.price*2)));
-      for (let j=0;j<n;j++) W.flyers.push({ x:ln.cx+rnd(-10,10), y:ln.y+1.15*T+rnd(-8,8), t:-j*0.03 });
-      gain(ln.cash); ln.cash = 0;
+  } else if (!atDesk) G.codeT = Math.max(0, G.codeT - dt);
+  // Engineers fill the office shelf
+  if (S.up.office && S.hires.eng) { G.engT += dt*S.hires.eng; while (G.engT >= 5) { G.engT -= 5; if (S.shelf < 30) { S.shelf++; S.features++; } } }
+  if (S.shelf > 0 && dist(P.x,P.y,SHELF.x,SHELF.y) < .9*T && P.stack < carryCap() && P.t > .12) { S.shelf--; P.stack++; P.t = 0; }
+  // Post at the park / billboard
+  if (P.stack > 0 && P.t > .22) {
+    if (dist(P.x,P.y,POST.x,POST.y) < 1.0*T) { P.stack--; P.t = 0; postFeature(false); }
+    else if (unlocked(LOC.board) && dist(P.x,P.y,BOARD.x,BOARD.y) < 1.0*T) { P.stack--; P.t = 0; postFeature(true); }
+  }
+  // Marketers grow followers
+  if (S.hires.mkt) S.followers += S.hires.mkt*(2 + .06*Math.sqrt(S.followers))*dt;
+
+  // Leads walk the streets
+  if (S.followers >= 1) {
+    G.spawnT -= dt;
+    const maxLeads = Math.min(3 + Math.floor(Math.sqrt(S.followers)/6), 12);
+    if (G.spawnT <= 0 && G.leads.length < maxLeads) {
+      const big = Math.random() < (S.rounds >= 1 ? .1 : .03);
+      const onH = Math.random() < .75;
+      const l = { x: onH ? rnd(.5,9.5)*T : VSTREET, y: onH ? pick(HSTREETS) : rnd(2,21)*T, size: leadSize()*(big?10:1), big, life: rnd(22,32),
+        shirt: big ? "#2b2b33" : pick(SHIRT), skin: pick(SKIN), face: big ? "🧐" : pick(FACES), walk:0 };
+      newTarget(l); G.leads.push(l);
+      G.spawnT = Math.max(1.3, 7 / (1 + Math.sqrt(S.followers)/6)) * rnd(.7,1.3);
     }
-    // Interns restock
-    for (const w of ln.workers) {
-      const tx = w.state==="toM" ? ln.mx+.95*T : ln.cx-.95*T, ty = ln.y + .35*T;
-      const d = dist(w.x,w.y,tx,ty);
-      if (d > 4) { const sp = 95*dt; w.x += (tx-w.x)/d*Math.min(sp,d); w.y += (ty-w.y)/d*Math.min(sp,d); w.walk = (w.walk||0)+dt*12; }
-      else {
-        w.t += dt;
-        if (w.state==="toM") { if (ln.mStack > 0 && w.stack < 3 && w.t > .35) { ln.mStack--; w.stack++; w.t = 0; } if (w.stack >= 3 || (w.stack>0 && w.t > 1.5)) { w.state = "toC"; w.t = 0; } }
-        else { if (w.stack > 0 && ln.cStack < 24 && w.t > .25) { w.stack--; ln.cStack++; w.t = 0; } if (w.stack === 0) { w.state = "toM"; w.t = 0; } }
+  }
+  for (const l of G.leads) {
+    l.life -= dt;
+    const d = dist(l.x,l.y,l.tx,l.ty);
+    if (d < 3) newTarget(l); else { const s = 55*dt; l.x += (l.tx-l.x)/d*s; l.y += (l.ty-l.y)/d*s; l.walk += dt*10; }
+    if (dist(P.x,P.y,l.x,l.y) < .7*T && closeLead(l)) l.dead = true;
+  }
+  // Sales reps close leads on their own
+  if (S.hires.sales && G.leads.length && S.features > 0) {
+    G.salesT += dt*S.hires.sales;
+    if (G.salesT >= 7) { G.salesT = 0; const l = G.leads.find(x=>!x.dead); if (l) { closeLead(l); l.dead = true; G.flyers.push({x:l.x,y:l.y,tx:LOC.office.cx,ty:LOC.office.cy,t:0,e:"🤝"}); } }
+  }
+  G.leads = G.leads.filter(l => !l.dead && l.life > 0);
+
+  // Events in SoMa
+  if (!G.event && t > G.nextEvent - 20000 && !G.eventAnnounced) {
+    G.eventAnnounced = true;
+    const opts = EVENTS.filter(e => (e.minRound||0) <= S.rounds);
+    G.pending = S.events === 0 ? EVENTS[0] : pick(opts);
+    toast(`${G.pending.emoji} ${G.pending.name} starts in 20s at the Event Space`);
+  }
+  if (!G.event && t > G.nextEvent) {
+    const ev = G.pending || EVENTS[0];
+    G.event = { ...ev, until: t + 32000 };
+    G.attendees = [];
+    const v = LOC.venue;
+    const n = ev.people + Math.min(S.rounds, 4);
+    for (let k=0;k<n;k++) G.attendees.push({ x:rnd(v.x+.5*T, v.x+v.w-.5*T), y:rnd(v.y+1.1*T, v.y+v.h-.4*T), vc: k < ev.vcs, walk:0,
+      shirt: k < ev.vcs ? "#20242c" : pick(SHIRT), skin: pick(SKIN), face: k < ev.vcs ? "😎" : pick(FACES), tx:0, ty:0 });
+    G.attendees.forEach(a=>{ a.tx=a.x; a.ty=a.y; });
+    G.hackPrize = 0; S.events++;
+    toast(`${ev.emoji} ${ev.name} is LIVE in SoMa!`);
+  }
+  if (G.event) {
+    const v = LOC.venue;
+    for (const a of G.attendees) {
+      const d = dist(a.x,a.y,a.tx,a.ty);
+      if (d < 3) { a.tx = rnd(v.x+.5*T, v.x+v.w-.5*T); a.ty = rnd(v.y+1.1*T, v.y+v.h-.4*T); }
+      else { const s = (a.vc ? 70 : 40)*dt; a.x += (a.tx-a.x)/d*s; a.y += (a.ty-a.y)/d*s; a.walk += dt*9; }
+      if (dist(P.x,P.y,a.x,a.y) < .65*T) {
+        a.dead = true; addXP(a.vc ? 12 : 3);
+        if (a.vc) { S.intros++; floatText(a.x,a.y-36,"💰 Investor intro!","#ffcc40",15); sparkle(a.x,a.y); }
+        else { S.contacts++; const f = 5 + Math.round(Math.sqrt(S.followers)); S.followers += f; floatText(a.x,a.y-36,`🤝 +${num(f)} followers`,"#fff",13); }
       }
     }
-    // Front customer buys from the counter
-    ln.queue.forEach((c,j)=>{ c.slot = { x: ln.cx + 1.15*T + j*.85*T, y: ln.y }; });
-    const c = ln.queue[0];
-    if (c && c.state==="queue" && dist(c.x,c.y,c.slot.x,c.slot.y) < 3) {
-      c.t += dt;
-      if (ln.cStack > 0 && c.got < c.want && c.t > .22) { ln.cStack--; c.got++; c.t = 0; }
-      if (c.got >= c.want) {
-        const pay = c.want*ln.price*(viral?2:1);
-        ln.cash += pay; S.sold += c.want; addXP(c.want);
-        floatText(c.x, c.y-30, "+"+money(pay), "#72ff8c");
-        c.state = "out"; c.face = pick(["😍","🤩","😄","🥳"]); c.path = [{x:W.door.x, y:ln.y}, {x:W.door.x, y:W.door.y}];
-        ln.queue.shift();
-      }
+    G.attendees = G.attendees.filter(a=>!a.dead);
+    if (G.event.hack && P.stack > 0 && inRect(P, v) && P.t > .25) {
+      P.stack--; P.t = 0; const prize = Math.round(40*Math.pow(3, S.rounds)); gain(prize); G.hackPrize += prize;
+      floatText(v.cx, v.y+1.3*T, `🏆 +${money(prize)}`, "#ffcc40");
+    }
+    if (t > G.event.until || (!G.attendees.length && !G.event.hack)) {
+      G.event = null; G.attendees = []; G.nextEvent = t + rnd(55000, 75000); G.eventAnnounced = false;
     }
   }
-  // Spawn customers
-  const open = W.lanes.filter(l=>l.open);
-  W.spawnT -= dt;
-  if (W.spawnT <= 0) {
-    const room = open.filter(l=>l.queue.length < 3);
-    if (room.length) {
-      const ln = pick(room), maxWant = Math.min(1 + Math.floor(W.L/2) + 1, 4);
-      const cst = { x:W.door.x, y:W.door.y, state:"in", want: 1+Math.floor(Math.random()*maxWant), got:0, t:0,
-        face:pick(FACES), shirt:pick(SHIRT), skin:pick(SKIN), walk:0 };
-      cst.path = [{x:W.door.x, y:ln.y}]; cst.lane = ln; ln.queue.push(cst); W.customers.push(cst);
-    }
-    W.spawnT = 3.2 / (1 + .35*(open.length-1)) * (count("market") ? .65 : 1) * rnd(.7,1.3);
-  }
-  // Move customers
-  for (const c of W.customers) {
-    let target = c.path.length ? c.path[0] : (c.state!=="out" ? c.slot : null);
-    if (!target) continue;
-    const d = dist(c.x,c.y,target.x,target.y), sp = (c.state==="out" ? 120 : 105)*dt;
-    if (d > 2) { c.x += (target.x-c.x)/d*Math.min(sp,d); c.y += (target.y-c.y)/d*Math.min(sp,d); c.walk += dt*12; }
-    else if (c.path.length) { c.path.shift(); if (c.state==="in" && !c.path.length) c.state = "queue"; }
-  }
-  W.customers = W.customers.filter(c => !(c.state==="out" && !c.path.length));
-  // Build spots drain cash while you stand on them
-  for (const s of visibleSpots()) {
+
+  // Shops: stand on a spot and your cash flows into it
+  if (G.blocked && !(Math.abs(P.x-G.blocked.x) < G.blocked.w/2 && Math.abs(P.y-G.blocked.y) < G.blocked.h/2)) G.blocked = null;
+  for (const s of spots()) {
+    if (G.blocked && G.blocked.id === s.id) continue;
     if (Math.abs(P.x-s.x) < s.w/2 && Math.abs(P.y-s.y) < s.h/2 && S.cash > 0) {
-      const pay = Math.min(S.cash, s.cost - s.paid, Math.max(s.cost*.9, 40)*dt);
-      S.cash -= pay; s.paid += pay;
-      if (Math.random() < .5) W.flyers.push({ x:P.x, y:P.y-20, t:0, to:s });
-      if (s.paid >= s.cost - 0.01) completeSpot(s);
+      paid[s.id] = paid[s.id] || 0;
+      const pay = Math.min(S.cash, s.cost - paid[s.id], Math.max(s.cost*.9, 30)*dt);
+      S.cash -= pay; paid[s.id] += pay;
+      if (Math.random() < .4) G.flyers.push({x:P.x, y:P.y-20, tx:s.x, ty:s.y, t:0, e:"💵"});
+      if (paid[s.id] >= s.cost - .01) { paid[s.id] = 0; G.blocked = {id:s.id, x:s.x, y:s.y, w:s.w, h:s.h}; s.buy(); addXP(5); sparkle(s.x, s.y); save(); }
     }
   }
-  // Golden unicorn pickup
-  if (!W.unicorn && now > W.nextUni) W.unicorn = { x:rnd(1,7)*T, y:rnd(1.5, W.H/T-1)*T, until:now+12000 };
-  if (W.unicorn) {
-    if (now > W.unicorn.until) { W.unicorn = null; W.nextUni = now + rnd(45000, 80000); }
-    else if (dist(P.x,P.y,W.unicorn.x,W.unicorn.y) < .7*T) { W.unicorn = null; W.nextUni = now + rnd(45000,80000); W.viralUntil = now + 20000; S.unicorns++; addXP(15); toast("🦄 You went VIRAL! Everything sells for 2x"); confettiSmall(P.x,P.y); }
-  }
+
+  // Pitch on Sand Hill
+  const atPitch = dist(P.x,P.y,PITCH.x,PITCH.y) < 1.05*T;
+  if (atPitch && !G.pitchHeld && reqsMet() && t > G.cooldown) { G.pitchHeld = true; openPitch(); }
+  if (!atPitch) G.pitchHeld = false;
+
   // Effects
-  W.floats.forEach(f=>f.t+=dt); W.floats = W.floats.filter(f=>f.t<1);
-  W.flyers.forEach(f=>f.t+=dt*3); W.flyers = W.flyers.filter(f=>f.t<1);
+  G.floats.forEach(f=>f.t+=dt*.8); G.floats = G.floats.filter(f=>f.t<1);
+  G.flyers.forEach(f=>f.t+=dt*2.6); G.flyers = G.flyers.filter(f=>f.t<1);
+  G.fog.forEach(f=>{ f.x += f.s*dt; if (f.x > WW+150) { f.x = -150; f.y = rnd(0,WH); } });
+}
+function newTarget(l){
+  if (Math.random() < .7) { l.tx = rnd(.5,9.5)*T; l.ty = HSTREETS.reduce((a,b)=>Math.abs(b-l.y)<Math.abs(a-l.y)?b:a); if (Math.abs(l.y-l.ty) > 4) { l.tx = VSTREET; } }
+  else { l.tx = VSTREET; l.ty = rnd(2,21)*T; if (Math.abs(l.x-VSTREET) > 4) { l.ty = l.y; } }
 }
 
-// ---------- Rendering ----------
-let dpr = 1, cw = 0, ch = 0, scale = 1, camY = 0, camX = 0;
-function resize(){ dpr = Math.min(devicePixelRatio||1, 2.5); cw = innerWidth; ch = innerHeight; cv.width = cw*dpr; cv.height = ch*dpr; scale = Math.min(cw/(WW+20), 1.7); }
+// ================= Rendering =================
+let dpr=1, cw=0, ch=0, scale=1, camX=0, camY=0;
+function resize(){ dpr=Math.min(devicePixelRatio||1, 2.5); cw=innerWidth; ch=innerHeight; cv.width=cw*dpr; cv.height=ch*dpr; scale=Math.min(cw/(WW+12), 1.6); }
 addEventListener("resize", resize);
 function rr(x,y,w,h,r){ g.beginPath(); g.roundRect(x,y,w,h,r); }
-function emoji(e, x, y, size){ g.font = `${size}px system-ui, "Apple Color Emoji", sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(e, x, y); }
-function text(t, x, y, size, color, weight=700){ g.font = `${weight} ${size}px Fredoka, "Arial Rounded MT Bold", system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = color; g.fillText(t, x, y); }
-function person(x, y, shirt, skin, face, walk, r=15){
+function emoji(e,x,y,size){ g.font=`${size}px system-ui, "Apple Color Emoji", sans-serif`; g.textAlign="center"; g.textBaseline="middle"; g.fillText(e,x,y); }
+function text(t,x,y,size,color,weight=700,font){ g.font=`${weight} ${size}px ${font||'Fredoka, "Arial Rounded MT Bold", system-ui, sans-serif'}`; g.textAlign="center"; g.textBaseline="middle"; g.fillStyle=color; g.fillText(t,x,y); }
+function person(x,y,shirt,skin,face,walk,r=14){
   const b = Math.sin(walk||0)*2;
-  g.fillStyle = "rgba(0,0,0,.28)"; g.beginPath(); g.ellipse(x, y+r*.9, r*.95, r*.38, 0, 0, 7); g.fill();
-  g.fillStyle = shirt; rr(x-r*.8, y-r*.35+b*.3, r*1.6, r*1.25, r*.55); g.fill();
-  g.fillStyle = skin; g.beginPath(); g.arc(x, y-r*.75+b*.5, r*.72, 0, 7); g.fill();
-  emoji(face, x, y-r*.72+b*.5, r*1.25);
+  g.fillStyle="rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(x,y+r*.9,r*.95,r*.38,0,0,7); g.fill();
+  g.fillStyle=shirt; rr(x-r*.8,y-r*.35+b*.3,r*1.6,r*1.25,r*.55); g.fill();
+  g.fillStyle=skin; g.beginPath(); g.arc(x,y-r*.75+b*.5,r*.72,0,7); g.fill();
+  emoji(face,x,y-r*.72+b*.5,r*1.25);
 }
-function itemStack(list, x, y, size){ list.forEach((it,k)=>emoji(PRODUCTS[it].e, x + (k%2?2:-2), y - k*size*.55, size)); }
+function bubble(x,y,content,bg,fg){ g.font='700 11px Fredoka, system-ui, sans-serif'; const w=Math.max(28, g.measureText(content).width+14);
+  g.fillStyle=bg; rr(x-w/2,y-11,w,22,11); g.fill(); g.beginPath(); g.moveTo(x-4,y+10); g.lineTo(x+4,y+10); g.lineTo(x,y+16); g.fill(); text(content,x,y,11,fg); }
+function zoneRing(x,y,r,color,label,pulse){
+  g.fillStyle = color.replace("1)", ".14)"); g.beginPath(); g.arc(x,y,r,0,7); g.fill();
+  g.strokeStyle = color.replace("1)", `${.5+.4*pulse})`); g.lineWidth=3; g.setLineDash([8,6]); g.beginPath(); g.arc(x,y,r,0,7); g.stroke(); g.setLineDash([]);
+  if (label) text(label, x, y+r+11, 11, "rgba(255,255,255,.85)");
+}
 
-function draw(now){
+function drawLoc(L, pulse){
+  const lockd = !unlocked(L);
+  g.fillStyle="rgba(0,0,0,.35)"; rr(L.x+3,L.y+6,L.w,L.h,16); g.fill();
+  g.fillStyle = lockd ? "#2a2f3a" : L.col; rr(L.x,L.y,L.w,L.h,16); g.fill();
+  g.fillStyle="rgba(255,255,255,.08)"; rr(L.x,L.y,L.w,.8*T,16); g.fill();
+  text(`${L.emoji} ${L.name}`, L.x+L.w/2, L.y+.3*T, 13, "#fff");
+  if (L.sub && L !== LOC.home) text(L.sub, L.x+L.w/2, L.y+.62*T, 9.5, "rgba(255,255,255,.6)", 600);
+  if (lockd) { text("🔒", L.cx, L.cy+.1*T, 26, "#fff"); text(`Unlocks at ${roundDef(L.unlock-1).name}`, L.cx, L.cy+.65*T, 11, "rgba(255,255,255,.7)"); }
+}
+
+function draw(){
+  const t = now(), pulse = (Math.sin(t/250)+1)/2;
   g.setTransform(dpr,0,0,dpr,0,0);
-  g.fillStyle = "#12082a"; g.fillRect(0,0,cw,ch);
-  const worldH = W.H*scale, topPad = 70, botPad = 70;
+  g.fillStyle="#101826"; g.fillRect(0,0,cw,ch);
+  const topPad = 118, botPad = 70;
   camX = (cw - WW*scale)/2;
-  const target = P.y*scale - ch*.55;
-  const minC = -topPad - Math.max(0,(ch - topPad - botPad - worldH)/2), maxC = Math.max(minC, worldH - ch + botPad);
-  camY += (Math.max(minC, Math.min(maxC, target)) - camY) * .15;
-  g.setTransform(dpr*scale,0,0,dpr*scale, dpr*camX, -dpr*camY);
-  const of = office(W.L);
-  // Floor & walls
-  g.fillStyle = "#0b0620"; rr(-10,-14,WW+20,W.H+24,22); g.fill();
-  g.fillStyle = of.floor; rr(0,0,WW,W.H,16); g.fill();
-  g.fillStyle = of.tile; for (let y=0;y<W.H;y+=T) for (let x=(y/T)%2?T:0;x<WW;x+=2*T) g.fillRect(x,y,T,Math.min(T,W.H-y));
-  g.fillStyle = "rgba(255,255,255,.07)"; g.fillRect(0,0,WW,10);
-  // Door
-  g.fillStyle = "#ffcc40"; rr(W.door.x-.6*T, W.H-8, 1.2*T, 10, 4); g.fill(); text("ENTRANCE", W.door.x, W.H-18, 9, "rgba(255,204,64,.7)");
-  // Lanes
-  for (const ln of W.lanes) {
-    if (!ln.open) continue;
-    // machine
-    g.fillStyle = "rgba(0,0,0,.25)"; rr(ln.mx-.78*T, ln.y-.5*T+6, 1.56*T, 1.1*T, 12); g.fill();
-    g.fillStyle = ln.p.col; rr(ln.mx-.78*T, ln.y-.55*T, 1.56*T, 1.1*T, 12); g.fill();
-    g.fillStyle = "rgba(255,255,255,.12)"; rr(ln.mx-.78*T, ln.y-.55*T, 1.56*T, .3*T, 12); g.fill();
-    g.fillStyle = "rgba(255,255,255,.85)"; g.beginPath(); g.arc(ln.mx-.1*T, ln.y-.02*T, 19, 0, 7); g.fill();
-    emoji(ln.p.e, ln.mx-.1*T, ln.y-.02*T, 26);
-    g.fillStyle = "rgba(0,0,0,.35)"; rr(ln.mx-.6*T, ln.y+.36*T, 1.1*T, 5, 3); g.fill();
-    g.fillStyle = "#4df2b2"; rr(ln.mx-.6*T, ln.y+.36*T, 1.1*T*(ln.mStack>=8?1:ln.mTimer/1.5), 5, 3); g.fill();
-    // tray
-    g.fillStyle = "rgba(255,255,255,.18)"; rr(ln.mx+.6*T, ln.y-.15*T, .7*T, .55*T, 8); g.fill();
-    itemStack(Array(ln.mStack).fill(ln.i), ln.mx+.95*T, ln.y+.05*T, 17);
-    // counter
-    g.fillStyle = "rgba(0,0,0,.25)"; rr(ln.cx-.7*T, ln.y-.42*T+6, 1.4*T, .9*T, 10); g.fill();
-    g.fillStyle = "#e9e2ff"; rr(ln.cx-.7*T, ln.y-.45*T, 1.4*T, .9*T, 10); g.fill();
-    g.fillStyle = ln.p.col; rr(ln.cx-.7*T, ln.y+.3*T, 1.4*T, .15*T, 4); g.fill();
-    itemStack(Array(Math.min(ln.cStack,12)).fill(ln.i), ln.cx-.25*T, ln.y+.08*T, 17);
-    if (ln.cStack > 12) text(`×${ln.cStack}`, ln.cx+.35*T, ln.y, 12, "#2a1650");
-    else if (ln.cStack === 0) text("EMPTY", ln.cx+.25*T, ln.y, 10, "rgba(42,22,80,.5)");
-    // drop/pick zones (subtle rings)
-    g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = 2; g.setLineDash([5,5]);
-    g.beginPath(); g.arc(ln.mx+.95*T, ln.y+.55*T, .42*T, 0, 7); g.stroke();
-    g.beginPath(); g.arc(ln.cx-.95*T, ln.y+.55*T, .42*T, 0, 7); g.stroke(); g.setLineDash([]);
-    // cash pile
-    if (ln.cash > 0) {
-      const n = Math.min(14, Math.ceil(ln.cash/(ln.price*2)));
-      for (let j=0;j<n;j++) { const bx = ln.cx + ((j%3)-1)*14, by = ln.y+1.2*T - Math.floor(j/3)*5;
-        g.fillStyle = "#1f8f3a"; rr(bx-11, by-6, 22, 12, 3); g.fill(); g.fillStyle = "#72ff8c"; rr(bx-9, by-4, 18, 8, 2); g.fill(); }
-      text(money(ln.cash), ln.cx, ln.y+1.2*T - Math.ceil(n/3)*5 - 14, 12, "#72ff8c");
-    }
+  const target = P.y*scale - (ch+topPad-botPad)/2;
+  camY += (Math.max(-topPad, Math.min(WH*scale - ch + botPad, target)) - camY)*.15;
+  g.setTransform(dpr*scale,0,0,dpr*scale,dpr*camX,-dpr*camY);
+
+  // Ground, bay, bridge
+  g.fillStyle="#2b3b2f"; rr(-8,0,WW+16,WH,18); g.fill();
+  g.fillStyle="#1d4f73"; g.fillRect(-8,0,WW+16,1.25*T);
+  g.strokeStyle="#d9482b"; g.lineWidth=5; g.beginPath(); g.moveTo(-8,.95*T); g.lineTo(WW+8,.95*T); g.stroke();
+  [1.8*T, WW-1.8*T].forEach(x=>{ g.fillStyle="#d9482b"; g.fillRect(x-5,.05*T,10,1.15*T); });
+  g.lineWidth=2; g.beginPath(); g.moveTo(-8,.35*T); g.quadraticCurveTo(1.8*T,.0, 1.8*T,.1*T); g.quadraticCurveTo(WW/2,.95*T, WW-1.8*T,.1*T); g.quadraticCurveTo(WW-1.8*T,0, WW+8,.35*T); g.stroke();
+  // Streets
+  g.fillStyle="#3b4250";
+  HSTREETS.forEach(y=>g.fillRect(0,y-.38*T,WW,.76*T));
+  g.fillRect(VSTREET-.38*T, 1.57*T, .76*T, WH-1.6*T);
+  g.strokeStyle="rgba(255,214,102,.45)"; g.lineWidth=2; g.setLineDash([12,10]);
+  HSTREETS.forEach(y=>{ g.beginPath(); g.moveTo(0,y); g.lineTo(WW,y); g.stroke(); });
+  g.beginPath(); g.moveTo(VSTREET,1.6*T); g.lineTo(VSTREET,WH); g.stroke(); g.setLineDash([]);
+  // Locations
+  Object.values(LOC).forEach(L=>drawLoc(L,pulse));
+
+  // Desk + terminal
+  g.fillStyle="#3b2a55"; rr(DESK.x-.75*T, DESK.y-.35*T, 1.5*T, .7*T, 8); g.fill();
+  emoji("💻", DESK.x, DESK.y-.08*T, 24);
+  zoneRing(DESK.x, DESK.y+.6*T, .48*T, "rgba(140,92,255,1)", "Claude Code", pulse);
+  const tx = LOC.home.x+.12*T, ty = LOC.home.y+.88*T, tw = 2.62*T;
+  g.fillStyle="rgba(5,8,14,.92)"; rr(tx, ty, tw, .98*T, 7); g.fill();
+  G.term.slice(-3).forEach((ln,k)=>{ g.font='500 8px "JetBrains Mono", ui-monospace, monospace'; g.textAlign="left"; g.textBaseline="middle"; g.fillStyle = ln.startsWith("✓") ? "#72ff8c" : ln.startsWith(">") ? "#ffcc40" : "#c9c9ff"; g.fillText(ln.length>24?ln.slice(0,23)+"…":ln, tx+5, ty+9+k*12); });
+  if (dist(P.x,P.y,DESK.x,DESK.y+.6*T) < .95*T && P.stack < carryCap()) {
+    g.fillStyle="rgba(255,255,255,.15)"; rr(DESK.x-.7*T, DESK.y+.42*T, 1.4*T, 5, 3); g.fill();
+    g.fillStyle="#8c5cff"; rr(DESK.x-.7*T, DESK.y+.42*T, 1.4*T*Math.min(1,G.codeT/codeTime()), 5, 3); g.fill();
   }
-  // Build spots
-  const vis = visibleSpots(), pulse = (Math.sin(now/250)+1)/2;
-  for (const s of vis) {
-    const afford = S.cash > 0;
-    g.fillStyle = "rgba(255,255,255,.06)"; rr(s.x-s.w/2, s.y-s.h/2, s.w, s.h, 12); g.fill();
-    if (s.paid > 0) { g.fillStyle = "rgba(250,87,229,.45)"; rr(s.x-s.w/2, s.y-s.h/2, s.w*(s.paid/s.cost), s.h, 12); g.fill(); }
-    g.strokeStyle = s.type==="raise" ? "#ffcc40" : `rgba(255,255,255,${.5+.4*pulse})`; g.lineWidth = 3; g.setLineDash([9,6]);
-    rr(s.x-s.w/2, s.y-s.h/2, s.w, s.h, 12); g.stroke(); g.setLineDash([]);
-    text(s.label, s.x, s.y - (s.h>T ? 10 : 7), s.w > 2*T ? 15 : 12, "#fff");
-    text(money(Math.max(0, s.cost - s.paid)), s.x, s.y + (s.h>T ? 12 : 9), s.w > 2*T ? 15 : 12, afford ? "#ffcc40" : "rgba(255,204,64,.6)");
+  // Park post zone
+  zoneRing(POST.x, POST.y, .75*T, "rgba(250,87,229,1)", "Post here 📱", pulse);
+  emoji("📱", POST.x, POST.y, 26);
+  // Billboard
+  if (unlocked(LOC.board)) { zoneRing(BOARD.x, BOARD.y-.1*T, .55*T, "rgba(255,204,64,1)", "", pulse); emoji("📺", BOARD.x, BOARD.y-.1*T, 24); }
+  // Office shelf
+  if (S.up.office) {
+    g.fillStyle="#1f3f55"; rr(SHELF.x-.65*T, SHELF.y-.45*T, 1.3*T, .9*T, 8); g.fill();
+    for (let k=0;k<Math.min(S.shelf,8);k++) emoji("🧩", SHELF.x-.35*T+(k%4)*.23*T, SHELF.y-.1*T+Math.floor(k/4)*.3*T, 13);
+    if (S.shelf>8) text(`×${S.shelf}`, SHELF.x, SHELF.y+.62*T, 11, "#fff");
+    text("Eng shelf", SHELF.x, SHELF.y-.62*T, 10, "rgba(255,255,255,.7)");
+    const ppl = [["eng","👩‍💻"],["mkt","📣"],["sales","🤝"]]; let k=0;
+    ppl.forEach(([key,e])=>{ for (let j=0;j<Math.min(S.hires[key],4);j++) { emoji(e, LOC.office.x+.45*T+(k%5)*.4*T, LOC.office.y+3.75*T+Math.floor(k/5)*.4*T, 15); k++; } });
   }
-  // Guidance arrow over the next spot
-  const next = vis[0];
-  if (next && S.cash >= Math.min(next.cost - next.paid, 1)) {
-    const ay = next.y - next.h/2 - 18 - pulse*8;
-    g.fillStyle = "#ffcc40"; g.beginPath(); g.moveTo(next.x-11, ay-12); g.lineTo(next.x+11, ay-12); g.lineTo(next.x, ay+2); g.fill();
+  // Event venue
+  const v = LOC.venue;
+  if (G.event) {
+    g.fillStyle=`rgba(255,204,64,${.12+.1*pulse})`; rr(v.x,v.y,v.w,v.h,16); g.fill();
+    text(`${G.event.emoji} ${G.event.name}`, v.cx, v.y+.98*T, 12, "#ffcc40");
+    text(`${Math.ceil((G.event.until-t)/1000)}s left${G.event.hack?" · drop 🧩 for prizes":""}`, v.cx, v.y+v.h-.22*T, 10, "rgba(255,255,255,.8)");
+  } else if (G.eventAnnounced && G.pending) {
+    text(`${G.pending.emoji} ${G.pending.name}`, v.cx, v.cy-.1*T, 13, "#fff");
+    text(`starts in ${Math.max(0,Math.ceil((G.nextEvent-t)/1000))}s`, v.cx, v.cy+.35*T, 12, "#ffcc40");
+  } else text("No event right now", v.cx, v.cy+.2*T, 11, "rgba(255,255,255,.55)");
+  // Sand Hill pitch
+  const ok = reqsMet(), cool = t < G.cooldown;
+  zoneRing(PITCH.x, PITCH.y, .95*T, ok && !cool ? "rgba(114,255,140,1)" : "rgba(255,255,255,1)", "", ok ? pulse : 0);
+  emoji("🧐", PITCH.x, PITCH.y-.05*T, 30);
+  const r = goal();
+  text(ok ? (cool ? `Investors are busy · ${Math.ceil((G.cooldown-t)/1000)}s` : `Walk in to pitch your ${r.name}!`) : `${r.name}: grow first (see top)`, PITCH.x, PITCH.y+1.2*T, 12, ok ? "#72ff8c" : "rgba(255,255,255,.7)");
+  emoji("🏛️", LOC.sand.x+.8*T, LOC.sand.y+1.4*T, 26); emoji("🏛️", LOC.sand.x+LOC.sand.w-.8*T, LOC.sand.y+1.4*T, 26);
+
+  // Shops
+  for (const s of spots()) {
+    g.fillStyle="rgba(0,0,0,.25)"; rr(s.x-s.w/2,s.y-s.h/2,s.w,s.h,10); g.fill();
+    const p = paid[s.id]||0; if (p>0) { g.fillStyle="rgba(250,87,229,.5)"; rr(s.x-s.w/2,s.y-s.h/2,s.w*p/s.cost,s.h,10); g.fill(); }
+    g.strokeStyle = S.cash >= s.cost - p ? `rgba(255,204,64,${.6+.4*pulse})` : "rgba(255,255,255,.35)"; g.lineWidth=2.5; g.setLineDash([7,5]); rr(s.x-s.w/2,s.y-s.h/2,s.w,s.h,10); g.stroke(); g.setLineDash([]);
+    text(s.label, s.x, s.y-(s.sub?9:7), 11, "#fff");
+    text(money(Math.max(0,s.cost-p)) + (s.sub ? ` · ${s.sub}` : ""), s.x, s.y+(s.sub?7:8), 10, "#ffcc40");
   }
-  // Unicorn
-  if (W.unicorn) { const u = W.unicorn; g.shadowColor = "#ffcc40"; g.shadowBlur = 18; emoji("🦄", u.x, u.y - 6 - pulse*6, 34); g.shadowBlur = 0; }
-  // Characters sorted by depth
+
+  // People, sorted by depth
   const actors = [];
-  W.customers.forEach(c=>actors.push({y:c.y, f:()=>{
-    person(c.x, c.y, c.shirt, c.skin, c.face, c.walk);
-    if (c.state!=="out") { const left = c.want - c.got;
-      g.fillStyle = "#fff"; rr(c.x-19, c.y-58, 38, 22, 11); g.fill();
-      g.beginPath(); g.moveTo(c.x-4,c.y-37); g.lineTo(c.x+4,c.y-37); g.lineTo(c.x,c.y-31); g.fill();
-      emoji(c.lane.p.e, c.x-6, c.y-47, 13); text(`×${left}`, c.x+10, c.y-47, 11, "#2a1650"); }
-    else { g.fillStyle = "rgba(255,255,255,.9)"; emoji(c.lane.p.e, c.x+14, c.y-4, 13); }
+  G.leads.forEach(l=>actors.push({y:l.y, f:()=>{
+    if (l.big) { g.fillStyle=`rgba(255,204,64,${.25+.2*pulse})`; g.beginPath(); g.arc(l.x,l.y,20,0,7); g.fill(); }
+    person(l.x,l.y,l.shirt,l.skin,l.face,l.walk,13);
+    bubble(l.x, l.y-36, l.big ? `💼 ×${num(l.size)}` : (l.size>1 ? `👀 ×${num(l.size)}` : "👀"), l.big ? "#ffcc40" : "#fff", "#1a1530");
   }}));
-  W.lanes.forEach(ln=>ln.workers.forEach(w=>actors.push({y:w.y, f:()=>{ person(w.x, w.y, w.shirt, w.skin, "🧑‍🎓", w.walk, 13); itemStack(Array(w.stack).fill(ln.i), w.x, w.y-34, 14); }})));
+  G.attendees.forEach(a=>actors.push({y:a.y, f:()=>{
+    if (a.vc) { g.fillStyle=`rgba(114,255,140,${.25+.25*pulse})`; g.beginPath(); g.arc(a.x,a.y,19,0,7); g.fill(); }
+    person(a.x,a.y,a.shirt,a.skin,a.face,a.walk,13);
+    bubble(a.x, a.y-34, a.vc ? "💰 VC" : "🤝", a.vc ? "#72ff8c" : "#fff", "#1a1530");
+  }}));
   actors.push({y:P.y, f:()=>{
-    g.fillStyle = "rgba(250,87,229,.25)"; g.beginPath(); g.ellipse(P.x, P.y+16, 22, 9, 0, 0, 7); g.fill();
-    person(P.x, P.y, "#fa57e5", "#ffd9b8", P.face, P.bob, 18);
-    emoji(S.logo, P.x + 12*P.dir, P.y - 34, 13);
-    if (P.stack.length) { itemStack(P.stack, P.x, P.y-48, 19); if (P.stack.length >= carryCap()) text("MAX", P.x, P.y-56-P.stack.length*10.5, 11, "#ffcc40"); }
+    g.fillStyle="rgba(250,87,229,.28)"; g.beginPath(); g.ellipse(P.x,P.y+16,22,9,0,0,7); g.fill();
+    if (S.up.scooter) emoji("🛴", P.x, P.y+10, 22);
+    person(P.x,P.y,"#fa57e5","#ffd9b8","😎",P.bob,17);
+    emoji(S.logo, P.x+12*P.dir, P.y-31, 12);
+    for (let k=0;k<P.stack;k++) emoji("🧩", P.x+(k%2?2:-2), P.y-46-k*10, 17);
+    if (P.stack >= carryCap()) text("FULL", P.x, P.y-56-P.stack*10, 10, "#ffcc40");
   }});
   actors.sort((a,b)=>a.y-b.y).forEach(a=>a.f());
-  // Floating texts and flying cash
-  for (const f of W.floats) { g.globalAlpha = 1-f.t; text(f.text, f.x, f.y - f.t*30, 15, f.color); }
+
+  // Fog (Karl)
+  g.fillStyle="rgba(230,236,245,.07)";
+  G.fog.forEach(f=>{ g.beginPath(); g.ellipse(f.x,f.y,f.r,f.r*.45,0,0,7); g.fill(); });
+
+  // Effects
+  for (const f of G.floats) { g.globalAlpha = Math.max(0,1-f.t); text(f.text, f.x, f.y-f.t*34, f.size, f.color); }
   g.globalAlpha = 1;
-  for (const f of W.flyers) {
-    if (f.t < 0) continue; const tx = f.to ? f.to.x : P.x, ty = f.to ? f.to.y : P.y-20, k = f.t*f.t;
-    const x = f.x + (tx-f.x)*k, y = f.y + (ty-f.y)*k - Math.sin(f.t*Math.PI)*30;
-    g.fillStyle = "#72ff8c"; rr(x-8, y-5, 16, 10, 2); g.fill();
+  for (const f of G.flyers) { const k=f.t*f.t; emoji(f.e, f.x+(f.tx-f.x)*k, f.y+(f.ty-f.y)*k-Math.sin(f.t*Math.PI)*30, 14); }
+
+  // Objective pointer
+  const obj = objective();
+  if (obj.target && dist(P.x,P.y,obj.target.x,obj.target.y) > 2.2*T) {
+    const a = Math.atan2(obj.target.y-P.y, obj.target.x-P.x), rr2 = 44;
+    g.save(); g.translate(P.x+Math.cos(a)*rr2, P.y-8+Math.sin(a)*rr2); g.rotate(a);
+    g.fillStyle="rgba(255,204,64,.95)"; g.beginPath(); g.moveTo(12,0); g.lineTo(-6,-9); g.lineTo(-6,9); g.fill(); g.restore();
   }
-  // Pointer to the next spot when it's far away
-  if (next && S.cash > 0 && dist(P.x,P.y,next.x,next.y) > 3.2*T) {
-    const a = Math.atan2(next.y-P.y, next.x-P.x), r = 42;
-    g.save(); g.translate(P.x + Math.cos(a)*r, P.y - 10 + Math.sin(a)*r); g.rotate(a);
-    g.fillStyle = "rgba(255,204,64,.9)"; g.beginPath(); g.moveTo(10,0); g.lineTo(-6,-8); g.lineTo(-6,8); g.fill(); g.restore();
-  }
+  if (obj.target) { const ay = obj.target.y - 1.0*T - pulse*6; g.fillStyle="#ffcc40"; g.beginPath(); g.moveTo(obj.target.x-9,ay-10); g.lineTo(obj.target.x+9,ay-10); g.lineTo(obj.target.x,ay+2); g.fill(); }
+
   // Joystick
   g.setTransform(dpr,0,0,dpr,0,0);
   if (joy.on) {
-    const d = Math.min(Math.hypot(joy.dx,joy.dy), 50), a = Math.atan2(joy.dy, joy.dx);
-    g.fillStyle = "rgba(255,255,255,.12)"; g.beginPath(); g.arc(joy.ox, joy.oy, 52, 0, 7); g.fill();
-    g.strokeStyle = "rgba(255,255,255,.3)"; g.lineWidth = 2; g.stroke();
-    g.fillStyle = "rgba(255,255,255,.55)"; g.beginPath(); g.arc(joy.ox + Math.cos(a)*d, joy.oy + Math.sin(a)*d, 24, 0, 7); g.fill();
+    const d=Math.min(Math.hypot(joy.dx,joy.dy),50), a=Math.atan2(joy.dy,joy.dx);
+    g.fillStyle="rgba(255,255,255,.12)"; g.beginPath(); g.arc(joy.ox,joy.oy,52,0,7); g.fill();
+    g.strokeStyle="rgba(255,255,255,.3)"; g.lineWidth=2; g.stroke();
+    g.fillStyle="rgba(255,255,255,.55)"; g.beginPath(); g.arc(joy.ox+Math.cos(a)*d, joy.oy+Math.sin(a)*d, 24, 0, 7); g.fill();
   }
 }
 
-// ---------- HUD ----------
-let hudSig = "";
-function hud(now){
-  $("money").textContent = money(S.cash);
-  const done = W.seq.filter(s=>s.done).length;
-  const sig = `${W.L}|${done}|${S.lvl}`;
-  if (sig !== hudSig) { hudSig = sig; $("office").textContent = officeName(W.L); $("round").textContent = `→ ${roundName(W.L)}`; $("prog").style.width = (done/W.seq.length*100)+"%"; $("flv").textContent = S.lvl; }
-  const v = now < W.viralUntil; $("viral").hidden = !v; if (v) $("viralT").textContent = Math.ceil((W.viralUntil-now)/1000)+"s";
-  // Coaching for the first office
-  let h = "";
-  const ln0 = W.lanes[0];
-  if (!S.moved) h = "👆 Drag anywhere to walk";
-  else if (S.sold < 4 && S.raised === 0) {
-    if (!P.stack.length && ln0.cStack === 0) h = `Walk to the ${ln0.p.e} machine to grab coffee`;
-    else if (P.stack.length) h = "Carry it to the counter for the customers";
-    else h = "Grab more coffee from the machine";
+// ================= Objectives (what to do next) =================
+function objective(){
+  const r = goal(), t = now();
+  if (!S.moved) return { text:"👆 Drag anywhere on the screen to walk" };
+  if (S.features === 0 && P.stack === 0) return { text:"🏠 Go to your desk and open Claude Code", target:{x:DESK.x, y:DESK.y+.6*T} };
+  if (P.stack > 0 && !S.firstPost) return { text:"🌳 Take your feature to Dolores Park and post your launch", target:POST };
+  if (G.event && (S.intros < r.intros || G.attendees.some(a=>a.vc))) return { text:`${G.event.emoji} ${G.event.name} is live! Run in and meet people${G.attendees.some(a=>a.vc)?", catch the 💰 VCs":""}`, target:{x:LOC.venue.cx, y:LOC.venue.cy} };
+  if (reqsMet() && t > G.cooldown) return { text:`🏦 You're ready. Walk into Sand Hill Road to pitch your ${r.name}`, target:PITCH };
+  if (S.cash < 0) return { text:"😬 You're behind on rent. Close customers to grow MRR", target: nearestLead() };
+  if (S.customers < r.cust && G.leads.length) return { text:`👀 Catch leads in the streets (${num(S.customers)}/${num(r.cust)} customers)`, target: nearestLead() };
+  if (S.followers < Math.max(r.fol, 1) || !G.leads.length) {
+    if (P.stack > 0) return { text:"📱 Post features to get followers. Followers bring leads", target: unlocked(LOC.board) ? BOARD : POST };
+    return { text:"🧩 Ship more features at your desk", target:{x:DESK.x, y:DESK.y+.6*T} };
   }
-  else if (S.life < 40 && S.raised === 0 && W.lanes.some(l=>l.cash>0)) h = "Walk over the 💵 to collect your money";
-  else if (S.built.length === 0 && S.raised === 0 && S.cash > 0) h = "Stand on the glowing spot to build";
-  const el = $("hint"); el.hidden = !h; if (h && el.textContent !== h) el.textContent = h;
+  if (S.intros < r.intros) return { text:`🎤 You need ${r.intros} investor intros. Catch VCs at the next event`, target:{x:LOC.venue.cx, y:LOC.venue.cy} };
+  if (P.stack > 0) return { text:"📱 Post to grow your following", target: unlocked(LOC.board) ? BOARD : POST };
+  return { text:"🧩 Ship features, post them, catch leads", target:{x:DESK.x, y:DESK.y+.6*T} };
+}
+function nearestLead(){ let b=null, bd=1e9; for (const l of G.leads) { const d=dist(P.x,P.y,l.x,l.y); if (d<bd) { bd=d; b=l; } } return b ? {x:b.x, y:b.y} : null; }
+
+// ================= HUD =================
+function hud(){
+  const m=$("money"); m.textContent = money(S.cash); m.classList.toggle("neg", S.cash<0);
+  const left = Math.ceil(MONTH - S.monthT), rent=$("rent");
+  rent.textContent = `${S.hires.eng+S.hires.mkt+S.hires.sales?"payroll":"rent"} −${money(burn())} · ${left}s`;
+  rent.classList.toggle("warn", S.cash < burn());
+  const r = goal();
+  $("goalName").textContent = r.name; $("month").textContent = `Month ${S.month}`;
+  const parts = [[`👥 ${num(S.customers)}/${num(r.cust)}`, S.customers>=r.cust], [`💰 ${S.intros}/${r.intros}`, S.intros>=r.intros]];
+  if (r.fol) parts.push([`📣 ${num(S.followers)}/${num(r.fol)}`, S.followers>=r.fol]);
+  const html = parts.map(([s,ok])=>`<span class="${ok?"ok":""}">${ok?"✓ ":""}${s}</span>`).join("");
+  if ($("reqs").innerHTML !== html) $("reqs").innerHTML = html;
+  $("sCust").textContent = `👥 ${num(S.customers)}`; $("sFol").textContent = `📣 ${num(S.followers)}`;
+  $("sMrr").textContent = `💳 ${money(mrr())}/mo`; $("sVer").textContent = `🧩 ${version()}`; $("flv").textContent = S.lvl;
+  const b=$("buff"), c = now() < G.coffeeUntil; b.hidden = !c; if (c) b.textContent = `☕️ Caffeinated ${Math.ceil((G.coffeeUntil-now())/1000)}s`;
+  const o = objective(), h=$("hint"); h.hidden = !o.text || modalOpen; if (o.text && h.textContent !== o.text) h.textContent = o.text;
 }
 
-// ---------- Founder Card ----------
-const tierOf = L => [["Bronze","🥉"],["Silver","🥈"],["Gold","🥇"],["Diamond","💎"],["Legend","👑"]][Math.min(4, Math.floor(L/2))];
-const lastRound = () => S.raised === 0 ? "Bootstrapped" : roundName(S.raised-1);
-function shareText(){ return `My startup ${S.name} ${S.logo} just raised its ${lastRound()} and moved into the ${officeName(S.L)}. ${num(S.sold)} customers served, ${money(S.life)} earned. Can you build a bigger one? #UnicornRush`; }
+// ================= Pitch (the boss of each level) =================
+let pitch = null;
+const zoneW = () => Math.max(.12, .32 - .03*S.rounds);
+const needleSpeed = () => 2.2 + .3*S.rounds;
+function openPitch(){
+  const r = goal(); joy.on = false;
+  pitch = { start: now(), hits:0, miss:0, zone:0, done:false };
+  const el = document.createElement("div"); el.className="pitch"; el.id="pitch";
+  el.innerHTML = `<button class="leave" data-act="leave">‹ Walk out</button>
+    <h2 class="grad">${r.name} pitch</h2><div class="investor">🧐</div><div class="quote">${r.line}</div>
+    <div class="dots"><i></i><i></i><i></i></div><small style="color:var(--ink-dim)" id="pStr">One slip allowed</small>
+    <div class="meter" id="meter"><div class="zone" id="zone"></div><div class="needle" id="needle"></div></div>
+    <div class="feedback" id="pFb">Tap when the needle is in the green</div>
+    <button class="goldbg go" data-act="pitchTap">PITCH!</button>`;
+  document.body.appendChild(el);
+  pitch.zone = randZone(); placeZone();
+}
+const randZone = () => { const h = zoneW()/2; return h + Math.random()*(1-2*h); };
+function placeZone(){ const z=$("zone"); z.style.left=((pitch.zone-zoneW()/2)*100)+"%"; z.style.width=(zoneW()*100)+"%"; }
+const needlePos = () => (Math.sin((now()-pitch.start)/1000*needleSpeed())+1)/2;
+const HIT = ["📈 “Wait, that growth is real?”","😮 They're leaning in…","🤝 “Let's talk terms.”"], MISS = ["😬 Awkward silence…","🫠 “Who are your competitors?”"];
+function pitchTap(){
+  if (!pitch || pitch.done) return;
+  if (Math.abs(needlePos()-pitch.zone) <= zoneW()/2) {
+    $("pFb").textContent = HIT[Math.min(pitch.hits,2)]; pitch.hits++;
+    document.querySelectorAll(".dots i").forEach((d,k)=>d.classList.toggle("on", k<pitch.hits));
+    if (pitch.hits >= 3) endPitch(true); else { pitch.zone = randZone(); placeZone(); }
+  } else {
+    $("pFb").textContent = MISS[Math.min(pitch.miss,1)]; pitch.miss++;
+    $("pStr").textContent = pitch.miss >= 1 ? "No more slips" : "One slip allowed";
+    const m=$("meter"); m.classList.remove("shake"); void m.offsetWidth; m.classList.add("shake");
+    if (pitch.miss > 1) { $("pFb").textContent = "❌ “We'll pass… for now.”"; endPitch(false); }
+  }
+}
+function endPitch(ok){
+  pitch.done = true;
+  setTimeout(()=>{ $("pitch")?.remove(); pitch = null;
+    const r = goal();
+    if (ok) {
+      S.intros -= r.intros; S.rounds++; S.valuation = r.val; gain(r.raise); addXP(60*S.rounds);
+      confetti(); queue({type:"raise", r}); save();
+    } else { G.cooldown = now() + 25000; toast("They passed. Polish the story and come back in 25s"); }
+  }, 900);
+}
+
+// ================= Founder Card =================
+const tierOf = () => [["Broke","🥲"],["Bronze","🥉"],["Silver","🥈"],["Gold","🥇"],["Diamond","💎"],["Unicorn","🦄"],["Legend","👑"]][Math.min(6, S.rounds)];
+const lastRound = () => S.rounds === 0 ? "Bootstrapping" : roundDef(S.rounds-1).name;
+function shareText(){ return `I moved to SF with $80. ${S.month} months later ${S.name} ${S.logo} has ${num(S.customers)} customers, ${num(S.followers)} followers and just raised its ${lastRound()} at a ${money(valuation())} valuation. Your turn. #UnicornRush`; }
 function cardURL(){
   const Wd=1080, Hd=1920, c=document.createElement("canvas"); c.width=Wd; c.height=Hd; const x=c.getContext("2d");
-  const bg=x.createLinearGradient(0,0,Wd,Hd); bg.addColorStop(0,"#8c5cff"); bg.addColorStop(.55,"#fa57e5"); bg.addColorStop(1,"#ffcc40");
-  x.fillStyle=bg; x.fillRect(0,0,Wd,Hd); x.fillStyle="rgba(0,0,0,.25)"; x.fillRect(0,0,Wd,Hd);
+  const bg=x.createLinearGradient(0,0,Wd,Hd); bg.addColorStop(0,"#1d4f73"); bg.addColorStop(.5,"#8c5cff"); bg.addColorStop(1,"#fa57e5");
+  x.fillStyle=bg; x.fillRect(0,0,Wd,Hd); x.fillStyle="rgba(0,0,0,.22)"; x.fillRect(0,0,Wd,Hd);
+  x.strokeStyle="rgba(217,72,43,.8)"; x.lineWidth=10; x.beginPath(); x.moveTo(0,230); x.quadraticCurveTo(Wd/2,420,Wd,230); x.stroke();
   x.textAlign="center"; x.fillStyle="#fff";
   const F=(s,w=700)=>`${w} ${s}px Fredoka, "Arial Rounded MT Bold", system-ui, sans-serif`;
-  const fit=(t,s,mw,y)=>{ do { x.font=F(s); s-=4; } while (x.measureText(t).width>mw && s>20); x.fillText(t,Wd/2,y); };
-  const [tn,te]=tierOf(S.raised);
-  x.globalAlpha=.85; x.font=F(40); x.fillText("U N I C O R N   R U S H", Wd/2, 140); x.globalAlpha=1;
-  x.font="240px system-ui"; x.fillText(S.logo, Wd/2, 520);
-  fit(S.name||"Stealth Startup", 100, Wd-140, 680);
-  x.font=F(54,600); const rl=`🏢 ${officeName(S.L)}`, rw=x.measureText(rl).width+80;
-  x.fillStyle="rgba(0,0,0,.3)"; x.beginPath(); x.roundRect((Wd-rw)/2,720,rw,90,45); x.fill(); x.fillStyle="#fff"; x.fillText(rl,Wd/2,785);
-  x.globalAlpha=.85; x.font=F(40); x.fillText("J U S T   R A I S E D", Wd/2, 1010); x.globalAlpha=1;
-  x.shadowColor="rgba(0,0,0,.3)"; x.shadowBlur=16; fit(lastRound(), 170, Wd-120, 1180); x.shadowBlur=0;
-  x.font=F(56,600); x.fillText(`${te} ${tn} Founder`, Wd/2, 1290);
-  [[`LV ${S.lvl}`, title()],[num(S.sold),"served"],[money(S.life),"earned"]].forEach(([a,b],k)=>{
-    const cx=Wd/6+k*Wd/3; x.font=F(60); x.fillText(a,cx,1500); x.globalAlpha=.85; x.font=F(36,600); x.fillText(b,cx,1555); x.globalAlpha=1; });
-  x.font=F(66); x.fillText("Can you beat me?", Wd/2, 1740); x.globalAlpha=.85; x.font=F(40,600); x.fillText("#UnicornRush", Wd/2, 1810); x.globalAlpha=1;
+  const fit=(tx,s,mw,y)=>{ do { x.font=F(s); s-=4; } while (x.measureText(tx).width>mw && s>20); x.fillText(tx,Wd/2,y); };
+  const [tn,te]=tierOf();
+  x.globalAlpha=.85; x.font=F(40); x.fillText("U N I C O R N   R U S H  ·  S F", Wd/2, 140); x.globalAlpha=1;
+  x.font="220px system-ui"; x.fillText(S.logo, Wd/2, 560);
+  fit(S.name||"Stealth Startup", 100, Wd-140, 720);
+  x.font=F(46,600); x.globalAlpha=.9; x.fillText(`Moved to SF with $80 · Month ${S.month}`, Wd/2, 800); x.globalAlpha=1;
+  x.globalAlpha=.85; x.font=F(40); x.fillText("V A L U A T I O N", Wd/2, 1000); x.globalAlpha=1;
+  x.shadowColor="rgba(0,0,0,.3)"; x.shadowBlur=16; fit(money(valuation()), 180, Wd-120, 1170); x.shadowBlur=0;
+  x.font=F(56,600); x.fillText(`${te} ${tn} · ${lastRound()}`, Wd/2, 1270);
+  [[num(S.customers),"customers"],[num(S.followers),"followers"],[`LV ${S.lvl}`, title()]].forEach(([a,b],k)=>{
+    const cx=Wd/6+k*Wd/3; x.font=F(62); x.fillText(a,cx,1480); x.globalAlpha=.85; x.font=F(34,600); x.fillText(b,cx,1535); x.globalAlpha=1; });
+  x.font=F(66); x.fillText("Can you beat me?", Wd/2, 1730); x.globalAlpha=.85; x.font=F(40,600); x.fillText("#UnicornRush", Wd/2, 1800); x.globalAlpha=1;
   return c.toDataURL("image/png");
 }
 
-// ---------- Modals & effects ----------
+// ================= Modals & effects =================
 const Q = []; let modalOpen = false;
 function queue(it){ Q.push(it); if (!modalOpen) showNext(); }
 function showNext(){
-  const it = Q.shift(); if (!it) { modalOpen = false; return; }
+  const it = Q.shift(); if (!it) { modalOpen=false; return; }
   modalOpen = true; joy.on = false; let body = "";
-  if (it.type==="onboard") body = `<div class="em" id="obLogo">${S.logo}</div><h2>Every unicorn starts in a garage.</h2>
-    <p>Name your startup. You'll run it yourself, from one coffee machine to Mars HQ.</p>
-    <input id="obName" maxlength="24" placeholder="e.g. Pied Piper" autocomplete="off">
+  if (it.type==="onboard") body = `<div class="em" id="obLogo">${S.logo}</div><h2>You just landed in SF with $80.</h2>
+    <p>No team, no product, rent due every month. Build it with Claude Code, post it, find customers and talk your way into Sand Hill Road.</p>
+    <input id="obName" maxlength="24" placeholder="Name your startup" autocomplete="off">
     <div class="logos">${["🦄","🚀","🔥","💎","🧠","⚡️","🐙","🍕","🌮","🛸","🐉","🌈"].map(l=>`<button class="${l===S.logo?"on":""}" data-act="logo" data-l="${l}">${l}</button>`).join("")}</div>
-    <button class="btn brand" data-act="found">FOUND MY COMPANY</button>`;
-  else if (it.type==="raise") body = `<div class="em">🎉</div><h2 class="grad">${roundName(S.L)} raised!</h2>
-    <p>Investors are in. ${esc(S.name)} is moving out of the ${officeName(S.L)} and into the <b style="color:var(--ink)">${officeName(S.L+1)}</b>, with new products and bigger customers.</p>
-    <button class="btn goldbg" data-act="share">Brag about it</button>
-    <button class="btn brand" data-act="nextOffice">MOVE IN →</button>`;
+    <button class="btn brand" data-act="found">START WITH $80</button>`;
+  else if (it.type==="raise") body = `<div class="em">🎉</div><h2 class="grad">${it.r.name} raised!</h2>
+    <p>${money(it.r.raise)} in the bank at a <b style="color:var(--ink)">${money(it.r.val)}</b> valuation.${S.rounds===1?" You can lease an office and hire a team now.":""}${S.rounds===2?" The billboard on the 101 is yours.":""}${it.r.val>=1e9?" You're a 🦄 unicorn.":""}</p>
+    <button class="btn goldbg" data-act="share">Post it to my story</button>
+    <button class="btn brand" data-act="close">BACK TO WORK</button>`;
   else if (it.type==="share") body = `<img class="share-img" alt="Your Founder Card" src="${cardURL()}">
     <h2 style="font-size:22px">Post it to your story</h2><p>Press and hold the card, then tap <b>Save to Photos</b>. Add the caption below.</p>
     <p id="capt" style="font-size:13px;color:var(--ink);-webkit-user-select:text;user-select:text">${esc(shareText())}</p>
-    <div class="row2"><button class="btn brand" data-act="copy" id="copyBtn">Copy caption</button><button class="btn ghost" data-act="close">${it.after?"Continue":"Done"}</button></div>`;
-  else if (it.type==="card") body = `<div class="em">${S.logo}</div><h2>${esc(S.name)}</h2><p>Level ${S.lvl} <b class="grad">${title()}</b> · ${officeName(S.L)}</p>
-    <div class="stats"><div><b>${num(S.sold)}</b><small>served</small></div><div><b>${money(S.life)}</b><small>earned</small></div><div><b>${S.raised}</b><small>rounds raised</small></div></div>
-    <button class="btn brand" data-act="share">Share my Founder Card</button><button class="btn ghost" data-act="close">Back to work</button>`;
-  const L = document.createElement("div"); L.className = "layer"; L.id = "layer"; L.innerHTML = `<div class="modal">${body}</div>`;
+    <div class="row2"><button class="btn brand" data-act="copy" id="copyBtn">Copy caption</button><button class="btn ghost" data-act="close">Done</button></div>`;
+  else if (it.type==="card") body = `<div class="em">${S.logo}</div><h2>${esc(S.name)}</h2><p>Level ${S.lvl} <b class="grad">${title()}</b> · Month ${S.month} in SF</p>
+    <div class="grid3"><div><b>${num(S.customers)}</b><small>customers</small></div><div><b>${num(S.followers)}</b><small>followers</small></div><div><b>${money(valuation())}</b><small>valuation</small></div>
+    <div><b>${version()}</b><small>shipped</small></div><div><b>${num(S.contacts)}</b><small>contacts</small></div><div><b>${S.virals}</b><small>viral posts</small></div></div>
+    <button class="btn brand" data-act="share">Share my Founder Card</button><button class="btn ghost" data-act="close">Back to the grind</button>`;
+  const L = document.createElement("div"); L.className="layer"; L.id="layer"; L.innerHTML=`<div class="modal">${body}</div>`;
   document.body.appendChild(L);
-  if (it.after) L.dataset.after = it.after;
 }
-function closeModal(){ const l = $("layer"); const after = l?.dataset.after; l?.remove(); modalOpen = false; if (after === "raise") Q.unshift({type:"raise"}); setTimeout(showNext, 150); }
+function closeModal(){ $("layer")?.remove(); modalOpen=false; setTimeout(showNext,150); }
 let toastT;
-function toast(msg){ document.querySelector(".toast")?.remove(); clearTimeout(toastT); const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); toastT=setTimeout(()=>t.remove(),2300); }
+function toast(msg){ document.querySelector(".toast")?.remove(); clearTimeout(toastT); const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); toastT=setTimeout(()=>t.remove(),2600); }
 function confetti(){
   const C=document.createElement("div"); C.className="confetti"; const E=["🎉","✨","💸","🦄","⭐️","🚀"];
   C.innerHTML=Array.from({length:40},(_,k)=>`<span style="left:${Math.random()*100}%;--dx:${(Math.random()*120-60).toFixed(0)}px;--r:${(Math.random()*720-360).toFixed(0)}deg;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s;animation-delay:${(Math.random()*.5).toFixed(2)}s">${E[k%E.length]}</span>`).join("");
   document.body.appendChild(C); setTimeout(()=>C.remove(),3600);
 }
-function confettiSmall(x,y){ for (let k=0;k<6;k++) W.floats.push({x:x+rnd(-30,30), y:y+rnd(-10,10), text:pick(["✨","⭐️","🎉"]), color:"#fff", t:rnd(0,.3)}); }
 
 document.addEventListener("click", e=>{
   const t = e.target.closest("[data-act]"); if (!t) return;
   const a = t.dataset.act;
-  if (a==="logo") { S.logo = t.dataset.l; $("obLogo").textContent = S.logo; document.querySelectorAll(".logos button").forEach(b=>b.classList.toggle("on", b===t)); }
-  else if (a==="found") { const n = ($("obName").value||"").trim(); S.name = n ? n.slice(0,24) : "Stealth Startup"; S.onboarded = true; save(); closeModal(); }
-  else if (a==="nextOffice") { S.L++; S.cash = 0; S.built = []; save(); buildLevel(); hudSig = ""; closeModal(); toast(`🏢 Welcome to the ${officeName(S.L)}!`); }
-  else if (a==="share") { const l=$("layer"); const fromRaise = !!l?.querySelector('[data-act="nextOffice"]'); l?.remove(); modalOpen=false; Q.unshift({type:"share", after: fromRaise ? "raise" : undefined}); showNext(); }
-  else if (a==="card") { if (!modalOpen) queue({type:"card"}); }
+  if (a==="logo") { S.logo=t.dataset.l; $("obLogo").textContent=S.logo; document.querySelectorAll(".logos button").forEach(b=>b.classList.toggle("on", b===t)); }
+  else if (a==="found") { const n=($("obName").value||"").trim(); S.name = n ? n.slice(0,24) : "Stealth Startup"; S.onboarded=true; save(); closeModal(); }
+  else if (a==="pitchTap") pitchTap();
+  else if (a==="leave") { $("pitch")?.remove(); pitch=null; G.cooldown = now()+5000; }
+  else if (a==="share") { $("layer")?.remove(); modalOpen=false; Q.unshift({type:"share"}); showNext(); }
+  else if (a==="card") { if (!modalOpen && !pitch) queue({type:"card"}); }
   else if (a==="close") closeModal();
   else if (a==="copy") {
-    const btn = $("copyBtn"); const done = ok => { btn.textContent = ok ? "Copied ✓" : "Select the caption above"; if (!ok) { const r=document.createRange(); r.selectNodeContents($("capt")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); } };
+    const btn=$("copyBtn"); const done = ok => { btn.textContent = ok ? "Copied ✓" : "Select the caption above"; if (!ok) { const r=document.createRange(); r.selectNodeContents($("capt")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); } };
     try { navigator.clipboard.writeText(shareText()).then(()=>done(true), ()=>done(false)); } catch(err) { done(false); }
   }
 });
-document.addEventListener("keydown", e=>{ if (e.key==="Enter" && document.activeElement===$("obName")) document.querySelector('[data-act="found"]').click(); });
+document.addEventListener("keydown", e=>{ if (e.key==="Enter" && document.activeElement===$("obName")) document.querySelector('[data-act="found"]').click(); if (e.key===" " && pitch) pitchTap(); });
 
-// ---------- Loop ----------
-let last = performance.now(), saveClock = 0;
-function frame(now){
-  const dt = Math.min((now-last)/1000, .1); last = now;
-  if (S.onboarded && !modalOpen) { update(dt, now); saveClock += dt; if (saveClock > 3) { saveClock = 0; save(); } }
-  draw(now); hud(now);
+// ================= Loop =================
+let last = now(), saveClock = 0;
+function frame(ts){
+  const dt = Math.min((ts-last)/1000, .1); last = ts;
+  if (S.onboarded && !modalOpen && !pitch) { update(dt); saveClock += dt; if (saveClock > 3) { saveClock = 0; save(); } }
+  if (pitch && !pitch.done) $("needle").style.left = (needlePos()*100)+"%";
+  draw(); hud();
   requestAnimationFrame(frame);
 }
-document.addEventListener("visibilitychange", ()=>{ if (document.hidden) save(); last = performance.now(); });
-
+document.addEventListener("visibilitychange", ()=>{ if (document.hidden) save(); last = now(); });
 function start(data){
-  if (data && data.S) S = Object.assign(fresh(), data.S);
-  resize(); buildLevel();
-  camY = P.y*scale - ch*.55;
+  if (data && data.S) S = data.S;
+  resize(); resetWorld();
+  camY = P.y*scale - ch/2;
   if (!S.onboarded) queue({type:"onboard"});
   requestAnimationFrame(frame);
 }

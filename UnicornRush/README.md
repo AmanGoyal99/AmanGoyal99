@@ -47,13 +47,17 @@ early reason to share. All the numbers are in `UnicornRush/Model/GameData.swift`
 
 ## Play it now on your iPhone (web version)
 
-`web/index.html` is the hands-on version, in the style of *My Pizza Ready* / *My Hotel*: drag
-anywhere to walk your founder, grab stacks of product from machines, carry them to counters where
-customers queue and pay, scoop up the cash piles, and stand on glowing floor spots to build new
-desks, hire interns, and upgrade your bag and sneakers. The last spot raises your next round and
-moves you to a bigger office (Garage → Coworking → Loft → Tower → Campus → Mars HQ). The native
-SwiftUI app below still uses the earlier tap-to-earn design. Open it in Safari on your iPhone, tap **Share →
-Add to Home Screen**, and it launches full-screen like an app. Progress is saved in that browser.
+`web/index.html` is **Unicorn Rush: SF**, a walk-around life sim. You land in San Francisco with
+$80 and rent due every month, then do the founder things yourself:
+
+- 🏠 **Hacker House:** stand at your desk and Claude Code ships features (🧩) onto your stack.
+- 🌳 **Dolores Park:** drop features to post them. Followers grow, and some posts go viral.
+- 👀 **The streets:** followers bring leads who walk around the city. Run into them to close them as paying customers (MRR).
+- 🎤 **SoMa events:** a Founder Mixer, AI Hackathon, VC Brunch or Demo Day goes live on a timer. Grab contacts and catch 💰 VCs for investor intros. Hackathons pay prizes for features.
+- 🏦 **Sand Hill Road:** once you have enough customers, intros and followers, walk in and pitch (a timing mini-game). The rounds are the levels: Pre-Seed → Seed → Series A → B → C (🦄) → IPO.
+- **Upgrades** are bought by standing on floor spots: Claude Max, 2nd monitor, backpack, oat lattes, an e-scooter, a SoMa office, and engineers, marketers and sales reps (their salaries burn runway). The billboard on the 101 unlocks at Seed.
+
+Open it in Safari on your iPhone and tap **Share → Add to Home Screen**. Progress is saved in that browser.
 
 ## Running the native app
 
