@@ -1,0 +1,782 @@
+<title>Unicorn Rush</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Unicorn Rush">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* Layout: one phone-width column; a sticky money HUD over a scrolling department list, tab bar pinned to the bottom. */
+:root {
+  --night: #12082a;      /* deep startup-after-midnight violet */
+  --night-2: #07041a;
+  --panel: rgba(255,255,255,.065);
+  --line: rgba(255,255,255,.11);
+  --ink: #f6f1ff;
+  --ink-dim: rgba(246,241,255,.58);
+  --pink: #fa57e5;
+  --violet: #8c5cff;
+  --mint: #4df2b2;
+  --gold: #ffcc40;
+  --cash: #72ff8c;
+  --display: "Fredoka", "Arial Rounded MT Bold", ui-rounded, system-ui, sans-serif;
+  --body: "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  background: radial-gradient(120% 60% at 50% 0%, #2a1159 0%, var(--night) 45%, var(--night-2) 100%) fixed, var(--night-2);
+  color: var(--ink); font-family: var(--body); font-weight: 700;
+  -webkit-user-select: none; user-select: none; overscroll-behavior: none;
+}
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.app {
+  max-width: 480px; margin: 0 auto; min-height: 100%;
+  padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px));
+  padding-block: 10px calc(86px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 12px;
+}
+.d { font-family: var(--display); }
+.dim { color: var(--ink-dim); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 12px; }
+.glow { border: 2px solid transparent; background: linear-gradient(#1c0f3c,#1c0f3c) padding-box, linear-gradient(90deg,var(--pink),var(--violet)) border-box; }
+.pill { border-radius: 999px; }
+.brand { background: linear-gradient(90deg,var(--pink),var(--violet)); }
+.goldbg { background: linear-gradient(135deg,var(--gold),#ff8a1f); color: #1a0d00; }
+.off { background: rgba(255,255,255,.08); color: var(--ink-dim); }
+.press { transition: transform .12s cubic-bezier(.3,1.6,.5,1); }
+.press:active { transform: scale(.92); }
+.bar { height: 9px; border-radius: 9px; background: rgba(255,255,255,.1); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; border-radius: 9px; background: linear-gradient(90deg,var(--pink),var(--violet)); }
+.bar.mint > i { background: var(--mint); }
+
+/* HUD */
+.hud { display: flex; flex-direction: column; gap: 10px; }
+.hud-top { display: flex; align-items: center; gap: 10px; }
+.logo { font-size: 30px; }
+.co { flex: 1; min-width: 0; }
+.co b { display: block; font-family: var(--display); font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.co small { color: var(--pink); font-size: 12px; }
+.lv { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: conic-gradient(var(--pink) calc(var(--p,0)*1turn), rgba(255,255,255,.12) 0); }
+.lv::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #1a0e38; }
+.lv span { position: relative; text-align: center; line-height: 1; font-family: var(--display); }
+.lv span em { display: block; font-style: normal; font-size: 9px; color: var(--ink-dim); }
+.lv .sp { position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--pink); font-size: 10px; display: grid; place-items: center; }
+.cash { text-align: center; }
+.cash .big { font-family: var(--display); font-size: 44px; font-weight: 700; color: var(--cash); font-variant-numeric: tabular-nums; line-height: 1.05; text-shadow: 0 0 24px rgba(114,255,140,.25); }
+.cash small { font-size: 13px; }
+.stats { display: grid; grid-template-columns: repeat(3,1fr); text-align: center; }
+.stats b { display: block; font-size: 15px; font-family: var(--display); }
+.stats small { font-size: 11px; color: var(--ink-dim); }
+
+/* Funding */
+.fund { display: flex; flex-direction: column; gap: 8px; }
+.fund-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-dim); }
+.fund .bar { height: 12px; }
+.pitch-btn { width: 100%; padding: 13px; font-family: var(--display); font-size: 18px; animation: throb .9s ease-in-out infinite alternate; }
+@keyframes throb { from { transform: scale(.98) } to { transform: scale(1.03) } }
+.viral { display: flex; justify-content: space-between; padding: 12px 14px; border-radius: 16px; font-family: var(--display); font-size: 16px; }
+
+.modes { display: flex; align-items: center; gap: 6px; }
+.modes button { flex: 1; padding: 7px 0; font-family: var(--display); font-size: 14px; }
+
+/* Department rows */
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.row { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.row-main { display: flex; gap: 12px; align-items: center; }
+.icon { width: 58px; height: 58px; flex: none; border-radius: 50%; position: relative; display: grid; place-items: center; font-size: 28px;
+  background: conic-gradient(var(--mint) calc(var(--p,0)*1turn), rgba(255,255,255,.08) 0); }
+.icon::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: #1d1140; }
+.icon span { position: relative; }
+.icon .cnt { position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); background: var(--violet); border-radius: 9px; padding: 0 7px; font-size: 11px; font-family: var(--display); }
+.icon.idle { animation: nudge 1.2s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: scale(1.07) } }
+.info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.info .t { display: flex; justify-content: space-between; gap: 8px; }
+.info .t b { font-family: var(--display); font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.info .rev { color: var(--cash); font-family: var(--display); font-size: 14px; white-space: nowrap; }
+.info .s { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.acts { display: flex; gap: 8px; }
+.acts button { flex: 1; padding: 7px 6px; line-height: 1.15; min-width: 0; }
+.acts button small { display: block; font-family: var(--display); font-size: 13px; }
+.acts button span { display: block; font-size: 10px; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mgr-on { flex: 1; display: grid; place-items: center; font-size: 11px; color: var(--ink-dim); }
+.locked { display: flex; align-items: center; gap: 12px; }
+.locked .em { width: 58px; text-align: center; font-size: 30px; }
+.locked .info b { font-family: var(--display); font-size: 16px; }
+.locked .info small { font-size: 12px; color: var(--ink-dim); }
+.locked button { padding: 8px 14px; line-height: 1.15; text-align: center; }
+.locked button small { display: block; font-family: var(--display); font-size: 13px; }
+.dimmed { opacity: .5; }
+.pop { position: absolute; right: 12px; top: 2px; color: var(--cash); font-family: var(--display); font-size: 17px; pointer-events: none; animation: rise .8s ease-out forwards; }
+@keyframes rise { from { transform: translateY(8px); opacity: 0 } 20% { opacity: 1 } to { transform: translateY(-22px); opacity: 0 } }
+.tip { text-align: center; font-size: 12px; color: var(--ink-dim); padding: 14px 10px; }
+
+/* Tabs */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 6px max(14px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+  background: rgba(10,5,28,.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); }
+.tabs nav { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); }
+.tabs button { padding: 6px 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--ink-dim); position: relative; }
+.tabs button i { font-style: normal; font-size: 21px; filter: grayscale(.8); }
+.tabs button.on { color: var(--pink); }
+.tabs button.on i { filter: none; }
+.tabs .badge { position: absolute; top: 2px; left: calc(50% + 8px); background: var(--pink); color: #fff; min-width: 16px; height: 16px; border-radius: 8px; font-size: 10px; display: grid; place-items: center; padding: 0 4px; }
+
+/* Founder / trophies / flex */
+.center { text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.title-big { font-family: var(--display); font-size: 28px; letter-spacing: .03em; background: linear-gradient(90deg,var(--pink),var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.center .bar { width: 100%; height: 12px; }
+.skill { display: flex; gap: 12px; align-items: center; }
+.skill .em { font-size: 30px; width: 44px; text-align: center; }
+.skill .info small { font-size: 12px; color: var(--ink-dim); }
+.pips { display: grid; grid-template-columns: repeat(10,1fr); gap: 3px; }
+.pips i { height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); }
+.pips i.on { background: linear-gradient(90deg,var(--pink),var(--violet)); }
+.skill button { width: 56px; height: 40px; font-family: var(--display); font-size: 16px; }
+.sect { display: flex; justify-content: space-between; padding: 0 4px; }
+.kv { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 3px 0; }
+.kv span { color: var(--ink-dim); }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.ach { text-align: center; padding: 10px 6px; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.ach .em { font-size: 30px; }
+.ach b { font-family: var(--display); font-size: 12.5px; }
+.ach small { font-size: 10px; color: var(--ink-dim); line-height: 1.2; }
+.big-btn { width: 100%; padding: 14px; font-family: var(--display); font-size: 18px; }
+.preview { width: min(270px, 100%); aspect-ratio: 9/16; border-radius: 24px; overflow: hidden; box-shadow: 0 0 40px rgba(250,87,229,.35); }
+.preview img, .preview canvas { width: 100%; height: 100%; display: block; }
+
+/* Overlays */
+.layer { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center;
+  padding: calc(20px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px));
+  background: rgba(4,2,14,.8); }
+.modal { width: min(400px,100%); max-height: 100%; overflow-y: auto; background: #1b0e3a; border-radius: 28px; padding: 24px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center;
+  border: 2px solid transparent; background: linear-gradient(#1b0e3a,#1b0e3a) padding-box, linear-gradient(135deg,var(--pink),var(--violet),var(--gold)) border-box;
+  animation: popin .35s cubic-bezier(.3,1.5,.5,1); }
+@keyframes popin { from { transform: scale(.8); opacity: 0 } }
+.modal .em { font-size: 76px; line-height: 1; }
+.modal h2 { margin: 0; font-family: var(--display); font-size: 28px; text-wrap: balance; }
+.modal p { margin: 0; font-size: 15px; color: var(--ink-dim); text-wrap: balance; }
+.modal .amt { font-family: var(--display); font-size: 40px; color: var(--cash); }
+.modal input { width: 100%; padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--ink); font: 700 22px var(--display); text-align: center; -webkit-user-select: text; user-select: text; }
+.logos { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; width: 100%; }
+.logos button { aspect-ratio: 1; border-radius: 50%; font-size: 26px; background: var(--panel); }
+.logos button.on { background: linear-gradient(135deg,var(--pink),var(--violet)); }
+.share-img { width: min(240px,70vw); border-radius: 18px; -webkit-user-select: auto; user-select: auto; -webkit-touch-callout: default; }
+.row2 { display: flex; gap: 8px; width: 100%; }
+.row2 button { flex: 1; padding: 13px; font-family: var(--display); font-size: 16px; }
+
+/* Pitch */
+.pitch { position: fixed; inset: 0; z-index: 50; background: radial-gradient(100% 70% at 50% 20%, #33135f, var(--night-2));
+  display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;
+  padding: calc(16px + env(safe-area-inset-top,0px)) max(20px, env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px)); }
+.pitch .leave { align-self: flex-start; color: var(--ink-dim); font-size: 15px; padding: 4px 0; }
+.pitch h2 { margin: 0; font-family: var(--display); font-size: 28px; }
+.investor { font-size: 84px; line-height: 1; }
+.quote { font-size: 17px; max-width: 34ch; text-wrap: balance; }
+.dots { display: flex; gap: 12px; }
+.dots i { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.12); transition: background .2s; }
+.dots i.on { background: var(--mint); box-shadow: 0 0 14px var(--mint); }
+.meter { width: 100%; max-width: 420px; height: 58px; border-radius: 14px; background: rgba(255,255,255,.1); position: relative; }
+.meter .zone { position: absolute; top: 0; bottom: 0; border-radius: 12px; background: rgba(77,242,178,.75); transition: left .25s cubic-bezier(.3,1.4,.5,1); }
+.meter .needle { position: absolute; top: -4px; bottom: -4px; width: 6px; margin-left: -3px; border-radius: 3px; background: #fff; box-shadow: 0 0 10px #fff; }
+.meter.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-9px) } 75% { transform: translateX(9px) } }
+.feedback { font-family: var(--display); font-size: 19px; min-height: 28px; }
+.pitch .go { margin-top: auto; width: 100%; max-width: 420px; padding: 24px; border-radius: 26px; font-family: var(--display); font-size: 32px; }
+
+/* Toast, unicorn, confetti */
+.toast { position: fixed; z-index: 60; left: 50%; top: calc(10px + env(safe-area-inset-top,0px)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px);
+  padding: 10px 16px; border-radius: 999px; background: rgba(8,4,20,.92); border: 1.5px solid var(--pink); font-size: 14px; text-align: center; pointer-events: none; animation: drop .3s cubic-bezier(.3,1.5,.5,1); }
+@keyframes drop { from { transform: translate(-50%,-30px); opacity: 0 } }
+.unicorn { position: fixed; z-index: 30; font-size: 56px; line-height: 1; padding: 6px; transform: translate(-50%,-50%); filter: drop-shadow(0 0 14px var(--gold)); animation: bob .9s ease-in-out infinite alternate; }
+@keyframes bob { from { margin-top: -10px; rotate: -8deg } to { margin-top: 10px; rotate: 8deg } }
+.confetti { position: fixed; inset: 0; z-index: 45; pointer-events: none; overflow: hidden; }
+.confetti span { position: absolute; top: -40px; font-size: 26px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(var(--r)); } }
+@media (prefers-reduced-motion: reduce) {
+  .pitch-btn, .icon.idle, .unicorn { animation: none; }
+  .confetti { display: none; }
+}
+</style>
+
+<div class="app" id="app">
+  <section id="tab-office" style="display:flex;flex-direction:column;gap:12px">
+    <div class="card hud">
+      <div class="hud-top">
+        <div class="logo" id="hLogo">🦄</div>
+        <div class="co"><b id="hName">Stealth Startup</b><small id="hSub">Garage · Wantrepreneur</small></div>
+        <button class="lv press" data-act="tab" data-tab="founder" aria-label="Founder level"><span><em>LV</em><span id="hLv">1</span></span><b class="sp" id="hSp" hidden>0</b></button>
+      </div>
+      <div class="cash"><div class="big" id="hCash">$0</div><small class="dim" id="hIps">$0/sec automated</small></div>
+      <div class="stats">
+        <div><b id="hVal">$0</b><small>Valuation</small></div>
+        <div><b id="hStreak">🔥 0d</b><small>Streak</small></div>
+        <div><b id="hStars">⭐️ 0</b><small>Stars</small></div>
+      </div>
+    </div>
+    <div class="card fund" id="fund"></div>
+    <div class="viral goldbg" id="viral" hidden><span>🚀 VIRAL! 7x revenue</span><span id="viralT">30s</span></div>
+    <div class="modes" id="modes"></div>
+    <div class="rows" id="rows"></div>
+    <div class="tip">Tap a department's icon to hustle it. Hire a manager and it runs itself, even while you're away.</div>
+  </section>
+  <section id="tab-founder" hidden></section>
+  <section id="tab-trophies" hidden></section>
+  <section id="tab-flex" hidden></section>
+</div>
+
+<div class="tabs"><nav id="tabs">
+  <button class="on" data-act="tab" data-tab="office"><i>🏢</i>Office</button>
+  <button data-act="tab" data-tab="founder"><i>🧑‍💻</i>Founder<b class="badge" id="tBadge" hidden>0</b></button>
+  <button data-act="tab" data-tab="trophies"><i>🏆</i>Trophies</button>
+  <button data-act="tab" data-tab="flex"><i>✨</i>Flex</button>
+</nav></div>
+
+<script>
+// ---------- Content & balancing (mirrors GameData.swift) ----------
+const ST = [
+  ["Coffee Bar","☕️","Fuel for the founders",4,1.07,1,0.6,1e3,"Barista Bea"],
+  ["Code Ship","💻","Ship features, not excuses",60,1.15,60,3,1.5e4,"10x Dev Dex"],
+  ["Design Studio","🎨","Pixels people pay for",720,1.14,540,6,1e5,"Figma Fiona"],
+  ["Growth Lab","📣","Go viral on purpose",8640,1.13,4320,12,5e5,"Growth Hacker Gus"],
+  ["Sales Floor","🤝","Always be closing",103680,1.12,51840,24,1.2e6,"Closer Cleo"],
+  ["Cloud Infra","☁️","Five nines, zero sleep",1244160,1.11,622080,96,1e7,"SRE Sam"],
+  ["AI Lab","🤖","Now with more AI",14929920,1.10,7464960,384,111111111,"Dr. Neural"],
+  ["Global HQ","🌍","Offices in every timezone",179159040,1.09,89579520,1536,555555555,"COO Kai"],
+  ["Space Division","🚀","Disrupting gravity",2149908480,1.08,1074954240,6144,1e10,"Astro Ava"],
+  ["Moonshot Factory","🦄","Impossible is a roadmap item",25798901760,1.07,29799514880,36864,1e11,"The Visionary"],
+].map(([name,emoji,tag,cost,growth,rev,cycle,mgr,mgrName],id)=>({id,name,emoji,tag,cost,growth,rev,cycle,mgr,mgrName}));
+
+const ROUNDS = [
+  ["Pre-Seed","🌱",1e5,"“Cute garage. Show me traction.”"],
+  ["Seed","🌿",1e7,"“I like the team. Do you have users?”"],
+  ["Series A","🦄",1e9,"“A unicorn? Prove it's not a horse with a party hat.”"],
+  ["Series B","📈",6e10,"“Unit economics. Go.”"],
+  ["Series C","💎",2e12,"“We're going to need a bigger term sheet.”"],
+  ["IPO","🔔",1e14,"“The whole market is watching. Ring the bell.”"],
+  ["Decacorn","🐉",4e15,"“Sovereign funds are calling.”"],
+  ["Big Tech","🏙️",2e17,"“Congress wants a word.”"],
+  ["Trillion Club","👑",1e19,"“Name a planet after the company?”"],
+  ["Mars Colony","🪐",6e20,"“Earth is a solved market.”"],
+  ["Galactic Empire","🌌",4e22,"“The final pitch. Make history.”"],
+].map(([name,emoji,target,line],id)=>({id,name,emoji,target,line}));
+const IPO = 5, VAL_MULT = 20, MILES = [25,50,100,200,300,400], MAXSK = 10;
+
+const SKILLS = [
+  ["hustle","Hustle","⚡️","+50% tap speed-up"],
+  ["leadership","Leadership","🧭","+10% all revenue"],
+  ["charisma","Charisma","🎤","Bigger pitch sweet spot"],
+  ["negotiation","Negotiation","🤑","−3% upgrade costs"],
+  ["vision","Vision","🔮","+1h & +5% offline earnings"],
+].map(([id,name,emoji,per])=>({id,name,emoji,per}));
+
+const TITLES = [[1,"Wantrepreneur"],[3,"Side Hustler"],[6,"Builder"],[10,"Operator"],[15,"Rainmaker"],[20,"Visionary"],[30,"Titan"],[40,"Legend"],[50,"GOAT"]];
+
+const ACH = [
+  ["first_hire","👋","First Hire","Hire your first manager",25,s=>s.st.some(x=>x.m)],
+  ["coffee_100","☕️","Caffeine Economy","Own 100 Coffee Bars",50,s=>s.st[0].n>=100],
+  ["code_100","💻","Ship It","Own 100 Code Ships",75,s=>s.st[1].n>=100],
+  ["all_depts","🏢","Full Org Chart","Open every department",200,s=>s.st.every(x=>x.n>0)],
+  ["full_auto","🤖","Fully Automated","Hire every manager",300,s=>s.st.every(x=>x.m)],
+  ["pre_seed","🌱","Funded!","Close your Pre-Seed",30,s=>s.rounds>=1||s.exits>0],
+  ["unicorn","🦄","Unicorn","Hit a $1B valuation",150,s=>s.best>=1e9],
+  ["ipo","🔔","Ring the Bell","Take a company public",500,s=>s.rounds>IPO||s.exits>0],
+  ["exit_1","🏝️","First Exit","Exit a company and start again",500,s=>s.exits>=1],
+  ["serial","🔁","Serial Founder","Exit 5 companies",2000,s=>s.exits>=5],
+  ["taps_1k","👆","Grinder","Tap 1,000 times",50,s=>s.taps>=1000],
+  ["taps_10k","🔥","Built Different","Tap 10,000 times",300,s=>s.taps>=10000],
+  ["unicorn_hunter","✨","Unicorn Hunter","Catch 25 golden unicorns",200,s=>s.caught>=25],
+  ["streak_7","📅","Showed Up","7-day streak",250,s=>s.streak>=7],
+  ["streak_30","🏆","Relentless","30-day streak",1500,s=>s.streak>=30],
+  ["trillion","👑","Trillionaire","Hit a $1T valuation",1000,s=>s.best>=1e12],
+].map(([id,emoji,title,detail,xp,met])=>({id,emoji,title,detail,xp,met}));
+
+// ---------- State ----------
+const SAVE_KEY = "unicornrush.web.v1";
+const freshStations = () => ST.map((_,i)=>({n:i===0?1:0, m:false, p:0, run:false}));
+const fresh = () => ({
+  name:"", logo:"🦄", onboarded:false,
+  cash:0, run:0, st:freshStations(), rounds:0, cooldown:0,
+  life:0, best:0, lvl:1, xp:0, sp:0, sk:{}, stars:0, exits:0, ach:[], taps:0, caught:0,
+  streak:0, lastDay:"", saved:Date.now(),
+});
+function load(){ try { const raw = localStorage.getItem(SAVE_KEY); if (raw) return Object.assign(fresh(), JSON.parse(raw)); } catch(e){} return null; }
+function save(){ S.saved = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch(e){} }
+let S = load() || fresh();
+let buyMode = "x1", viralUntil = 0, unicorn = null, nextUnicorn = Date.now()+45000, tab = "office";
+
+// ---------- Formatting ----------
+const SUF = ["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc","UDc","DDc","TDc","QaDc","QiDc","SxDc","SpDc","OcDc","NoDc","Vg"];
+function num(v){
+  if (!isFinite(v)) return "∞";
+  if (v < 999.5) return v < 10 && v !== Math.round(v) ? v.toFixed(1) : Math.round(v).toString();
+  let t = Math.min(Math.floor(Math.log10(v)/3), SUF.length-1), s = v/Math.pow(1000,t);
+  if (s >= 999.5 && t < SUF.length-1) { t++; s /= 1000; }
+  return (s>=100 ? s.toFixed(0) : s>=10 ? s.toFixed(1) : s.toFixed(2)) + SUF[t];
+}
+const money = v => "$"+num(v);
+function dur(sec){
+  if (sec < 1) return Math.max(sec,0).toFixed(1)+"s";
+  const s = Math.ceil(sec);
+  if (s < 60) return s+"s";
+  if (s < 3600) return `${Math.floor(s/60)}m ${s%60}s`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m`;
+  return `${Math.floor(s/86400)}d ${Math.floor(s%86400/3600)}h`;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---------- Derived numbers (mirrors GameEngine.swift) ----------
+const sk = id => S.sk[id] || 0;
+const isViral = () => viralUntil > Date.now();
+const permMult = () => (1+0.1*sk("leadership")) * Math.pow(2,S.rounds) * (1+0.02*S.stars);
+const globalMult = () => permMult() * (isViral()?7:1);
+const valuation = () => S.run * VAL_MULT;
+const discount = () => 1 - 0.03*sk("negotiation");
+function cycle(i){ let t = ST[i].cycle; for (const m of MILES) if (S.st[i].n >= m) t /= 2; return t; }
+function revCycle(i, mult){ const n = S.st[i].n; const r = n>=500 ? Math.pow(2, Math.floor((n-400)/100)) : 1; return ST[i].rev*n*r*(mult ?? globalMult()); }
+function ips(){ let t=0; S.st.forEach((s,i)=>{ if (s.n>0&&s.m) t += revCycle(i)/cycle(i); }); return t; }
+const offRate = () => 0.5 + 0.05*sk("vision");
+const offCap = () => (2+sk("vision"))*3600;
+function offIps(){ let t=0; S.st.forEach((s,i)=>{ if (s.n>0&&s.m) t += revCycle(i,permMult())/cycle(i); }); return t*offRate(); }
+const unlocked = i => i===0 || S.st[i-1].n>0;
+function nextMile(i){ const n=S.st[i].n; return MILES.find(m=>m>n) ?? (Math.floor(n/100)+1)*100; }
+function purchase(i){
+  const d=ST[i], g=d.growth, first=d.cost*Math.pow(g,S.st[i].n)*discount();
+  const cost = k => first*(Math.pow(g,k)-1)/(g-1);
+  if (buyMode==="MAX"){ const k=Math.max(1, Math.floor(Math.log(S.cash*(g-1)/first+1)/Math.log(g))); return {k, c:cost(k)}; }
+  const k = {x1:1,x10:10,x100:100}[buyMode]; return {k, c:cost(k)};
+}
+const mgrCost = i => ST[i].mgr*discount();
+const nextRound = () => ROUNDS[S.rounds];
+const roundName = () => S.rounds===0 ? "Garage" : ROUNDS[S.rounds-1].name;
+function roundProg(){
+  const r = nextRound(); if (!r) return 1;
+  const prev = S.rounds===0 ? 1 : ROUNDS[S.rounds-1].target;
+  const lo=Math.log10(prev), hi=Math.log10(r.target), v=Math.log10(Math.max(valuation(),1));
+  return Math.min(Math.max((v-lo)/(hi-lo),0),1);
+}
+const canPitch = () => { const r=nextRound(); return !!r && valuation()>=r.target && Date.now()>=S.cooldown; };
+const zoneW = () => Math.max(0.10, 0.30-0.018*S.rounds) + 0.012*sk("charisma");
+const needleSpeed = () => 2.2 + 0.25*S.rounds;
+const missesAllowed = () => sk("charisma")>=5 ? 2 : 1;
+const canExit = () => S.rounds > IPO;
+const starsOnExit = () => Math.floor(10*Math.sqrt(S.run/1e11));
+const xpNeed = l => 25*Math.pow(l,1.6);
+const title = () => { let t="Founder"; for (const [l,n] of TITLES) if (S.lvl>=l) t=n; return t; };
+
+// ---------- Actions ----------
+function earn(a){ S.cash+=a; S.run+=a; S.life+=a; S.best=Math.max(S.best, valuation()); }
+function addXP(a){
+  S.xp += a;
+  while (S.xp >= xpNeed(S.lvl)) { S.xp -= xpNeed(S.lvl); S.lvl++; S.sp++; toast(`⬆️ Founder Level ${S.lvl}! +1 skill point`); }
+}
+function buy(i){
+  const p = purchase(i); if (!unlocked(i) || p.c > S.cash) return;
+  const before = S.st[i].n; S.cash -= p.c; S.st[i].n += p.k; addXP(p.k*0.5);
+  if (before===0) toast(`${ST[i].emoji} ${ST[i].name} is open for business!`);
+  else { const m = MILES.find(m=>before<m && S.st[i].n>=m); if (m) toast(`⚡️ ${ST[i].name} hit ${m}: 2x speed!`); }
+}
+function hire(i){
+  const c = mgrCost(i), s = S.st[i]; if (s.m || s.n===0 || S.cash<c) return;
+  S.cash -= c; s.m = true; s.run = true; addXP(20);
+  toast(`🤝 ${ST[i].mgrName} now runs ${ST[i].name}`);
+}
+function tapSt(i){
+  const s = S.st[i]; if (s.n===0) return;
+  S.taps++; addXP(0.25);
+  if (!s.run) { s.run = true; s.p = 0; }
+  s.p += 0.06*(1+0.5*sk("hustle"));
+}
+function upgrade(id){ if (S.sp<=0 || sk(id)>=MAXSK) return; S.sp--; S.sk[id]=sk(id)+1; }
+function catchUnicorn(){
+  unicorn = null; S.caught++; addXP(10);
+  if (Math.random()<0.5 || ips()===0) { const b = Math.max(ips()*900, 50*permMult()); earn(b); toast(`✨ Angel investor! +${money(b)}`); }
+  else { viralUntil = Date.now()+30000; toast("🚀 You went VIRAL! 7x revenue for 30s"); }
+}
+function finishPitch(ok){
+  const r = nextRound(); if (!r) return;
+  if (ok) { S.rounds++; addXP(40*(r.id+1)); queue({type:"round", r}); confetti(); }
+  else { S.cooldown = Date.now()+20000; toast("😬 They passed. Polish the deck and try again in 20s."); }
+  save();
+}
+function exitCompany(){
+  if (!canExit()) return;
+  const g = starsOnExit(); S.stars+=g; S.exits++; S.cash=0; S.run=0; S.st=freshStations(); S.rounds=0; viralUntil=0;
+  addXP(250); queue({type:"exit", g}); confetti(); save(); rowsSig="";
+}
+function checkAch(){
+  for (const a of ACH) if (!S.ach.includes(a.id) && a.met(S)) { S.ach.push(a.id); addXP(a.xp); queue({type:"ach", a}); }
+}
+const dayStr = d => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+function daily(silent){
+  if (!S.onboarded) return;
+  const today = dayStr(new Date()); if (S.lastDay===today) return;
+  const y = dayStr(new Date(Date.now()-86400000));
+  S.streak = S.lastDay===y ? S.streak+1 : 1; S.lastDay = today;
+  const cash = Math.max(ips()*60*(5+5*Math.min(S.streak,30)), 100*S.streak), xp = 20*Math.min(S.streak,30);
+  earn(cash); addXP(xp);
+  if (!silent) queue({type:"reward", em:"🔥", h:`Day ${S.streak} streak!`, p:"Showing up is the job. Today's bonus:", amt:cash, f:`+${xp} XP · Come back tomorrow to keep the streak alive`});
+}
+function offline(){
+  const el = (Date.now()-S.saved)/1000; if (!S.onboarded || el<60) return;
+  const secs = Math.min(el, offCap()), amt = offIps()*secs; if (amt<=0) return;
+  earn(amt); S.saved = Date.now();
+  queue({type:"reward", em:"😴", h:"While you were away…", p:`Your team worked ${dur(secs)} and earned`, amt, f:"Level up Vision to earn more, for longer."});
+}
+
+// ---------- Simulation ----------
+const pulses = [];
+function advance(dt){
+  let got = 0;
+  S.st.forEach((s,i)=>{
+    if (s.n===0 || !(s.run||s.m)) return;
+    const c = cycle(i), r = revCycle(i);
+    if (s.m && c < 0.15) { got += r*dt/c; s.p = 1; return; }
+    s.p += dt/c; let paid = false;
+    while (s.p >= 1) { got += r; paid = true; if (s.m) s.p -= 1; else { s.p = 0; s.run = false; } }
+    if (paid && c >= 0.5) pulses.push([i,r]);
+  });
+  if (got>0) earn(got);
+}
+
+// ---------- UI: office ----------
+const $ = id => document.getElementById(id);
+let rowsSig = "", refs = [];
+function buildRows(){
+  const vis = ST.filter(d => unlocked(d.id) || (d.id>0 && unlocked(d.id-1)));
+  const sig = vis.map(d=>`${d.id}:${S.st[d.id].n>0}:${S.st[d.id].m}:${unlocked(d.id)}`).join("|");
+  if (sig === rowsSig) return; rowsSig = sig; refs = [];
+  $("rows").innerHTML = vis.map(d=>{
+    const s = S.st[d.id];
+    if (s.n===0) {
+      const ok = unlocked(d.id);
+      return `<div class="card locked ${ok?"":"dimmed"}" data-row="${d.id}">
+        <div class="em">${ok?d.emoji:"🔒"}</div>
+        <div class="info"><b>${d.name}</b><small>${ok?esc(d.tag):"Open "+ST[d.id-1].name+" first"}</small></div>
+        ${ok?`<button class="pill press" data-act="buy" data-i="${d.id}"><span style="font-size:11px">OPEN</span><small data-r="cost"></small></button>`:""}
+      </div>`;
+    }
+    return `<div class="card row" data-row="${d.id}">
+      <div class="row-main">
+        <button class="icon press" data-act="tap" data-i="${d.id}" aria-label="Hustle ${d.name}"><span>${d.emoji}</span><b class="cnt" data-r="cnt"></b></button>
+        <div class="info">
+          <div class="t"><b>${d.name}</b><span class="rev" data-r="rev"></span></div>
+          <div class="bar mint"><i data-r="bar"></i></div>
+          <div class="s"><span data-r="time"></span><span data-r="ms"></span></div>
+        </div>
+      </div>
+      <div class="acts">
+        ${s.m ? `<div class="mgr-on">🤝 ${d.mgrName}</div>` :
+          `<button class="pill press" data-act="hire" data-i="${d.id}" data-r="hire"><span>HIRE ${d.mgrName.toUpperCase()}</span><small data-r="hcost"></small></button>`}
+        <button class="pill press" data-act="buy" data-i="${d.id}" data-r="buy"><span data-r="blbl"></span><small data-r="bcost"></small></button>
+      </div>
+    </div>`;
+  }).join("");
+  document.querySelectorAll("[data-row]").forEach(el=>{
+    const r = {el}; el.querySelectorAll("[data-r]").forEach(x=>r[x.dataset.r]=x); refs[+el.dataset.row] = r;
+  });
+}
+function setCls(el, on, cls){ if (el) { el.classList.toggle(cls[0], on); el.classList.toggle(cls[1], !on); } }
+function drawOffice(){
+  $("hLogo").textContent = S.logo; $("hName").textContent = S.name || "Stealth Startup";
+  $("hSub").textContent = `${roundName()} · ${title()}`;
+  $("hLv").textContent = S.lvl; document.querySelector(".lv").style.setProperty("--p", S.xp/xpNeed(S.lvl));
+  $("hSp").hidden = S.sp<=0; $("hSp").textContent = S.sp;
+  $("hCash").textContent = money(S.cash); $("hIps").textContent = `${money(ips())}/sec automated`;
+  $("hVal").textContent = money(valuation()); $("hStreak").textContent = `🔥 ${S.streak}d`; $("hStars").textContent = `⭐️ ${S.stars}`;
+  drawFund();
+  $("viral").hidden = !isViral(); if (isViral()) $("viralT").textContent = dur((viralUntil-Date.now())/1000);
+  buildRows();
+  refs.forEach((r,i)=>{
+    if (!r) return; const s = S.st[i], p = purchase(i), afford = p.c<=S.cash;
+    if (s.n===0) { if (r.cost) r.cost.textContent = money(p.c); setCls(r.el.querySelector("button"), afford, ["brand","off"]); return; }
+    const c = cycle(i), rev = revCycle(i), prog = Math.min(s.p,1);
+    r.cnt.textContent = s.n; r.rev.textContent = "+"+money(rev); r.bar.style.width = (prog*100)+"%";
+    r.el.querySelector(".icon").style.setProperty("--p", prog);
+    r.el.querySelector(".icon").classList.toggle("idle", !s.run && !s.m);
+    r.time.textContent = (s.m && c<0.15) ? `${money(rev/c)}/s` : (!s.run && !s.m ? "Tap to run" : dur(c*(1-prog)));
+    r.ms.textContent = `Next ⚡️ at ${nextMile(i)}`;
+    r.blbl.textContent = `BUY ×${p.k}`; r.bcost.textContent = money(p.c); setCls(r.buy, afford, ["brand","off"]);
+    if (r.hire) { const mc = mgrCost(i); r.hcost.textContent = money(mc); setCls(r.hire, S.cash>=mc, ["goldbg","off"]); }
+  });
+  while (pulses.length) {
+    const [i,amt] = pulses.shift(); const r = refs[i]; if (!r || tab!=="office") continue;
+    const sp = document.createElement("span"); sp.className = "pop"; sp.textContent = "+"+money(amt);
+    r.el.appendChild(sp); setTimeout(()=>sp.remove(), 800);
+  }
+}
+let fundSig = "";
+function drawFund(){
+  const r = nextRound(), el = $("fund");
+  let sig, html;
+  if (!r) { sig = "done"; html = `<div>🌌 You've conquered every market. Exit and do it again, bigger.</div>`; }
+  else {
+    const state = canPitch() ? "pitch" : (valuation()>=r.target ? "cool" : "grow");
+    sig = r.id+state;
+    html = `<div class="fund-h"><span class="eyebrow">Next round</span><span class="d">${r.emoji} ${r.name} at ${money(r.target)}</span></div>
+      <div class="bar"><i id="fBar"></i></div>
+      ${state==="pitch" ? `<button class="pill goldbg pitch-btn" data-act="pitch">🎤 Investors want in! PITCH NOW</button>` :
+        state==="cool" ? `<small class="dim" id="fCool"></small>` : `<small class="dim">Close it to permanently 2x all revenue</small>`}`;
+  }
+  if (sig !== fundSig) { fundSig = sig; el.innerHTML = html; el.classList.toggle("glow", sig.endsWith("pitch")); }
+  const b = $("fBar"); if (b) b.style.width = (roundProg()*100)+"%";
+  const c = $("fCool"); if (c) c.textContent = `Investors will see you again in ${dur((S.cooldown-Date.now())/1000)}`;
+}
+function drawModes(){
+  $("modes").innerHTML = `<span class="dim" style="font-size:13px">Buy</span>` + ["x1","x10","x100","MAX"].map(m=>
+    `<button class="pill press ${buyMode===m?"brand":"card"}" style="padding:7px 0" data-act="mode" data-m="${m}">${m}</button>`).join("");
+}
+
+// ---------- UI: other tabs (rebuilt only when their content changes) ----------
+const panelSig = {};
+function setPanel(id, html){ if (panelSig[id] !== html) { panelSig[id] = html; $(id).innerHTML = html; } }
+function drawFounder(){
+  const next = TITLES.find(([l])=>l>S.lvl);
+  setPanel("tab-founder", `<div style="display:flex;flex-direction:column;gap:12px">
+    <div class="card center">
+      <div style="font-size:58px">${S.logo}</div>
+      <div class="title-big">${title().toUpperCase()}</div>
+      <div class="d" style="font-size:16px">Founder Level ${S.lvl}</div>
+      <div class="bar"><i style="width:${(S.xp/xpNeed(S.lvl)*100).toFixed(1)}%"></i></div>
+      <small class="dim">${Math.floor(S.xp)} / ${Math.floor(xpNeed(S.lvl))} XP</small>
+      ${next?`<small>Become a <b style="color:var(--pink)">${next[1]}</b> at level ${next[0]}</small>`:""}
+    </div>
+    <div class="sect"><span class="eyebrow">Skills</span><span style="font-size:13px;color:${S.sp>0?"var(--pink)":"var(--ink-dim)"}">${S.sp} point${S.sp===1?"":"s"} to spend</span></div>
+    ${SKILLS.map(k=>{ const l=sk(k.id), max=l>=MAXSK, can=S.sp>0&&!max; return `
+      <div class="card skill ${can?"glow":""}">
+        <div class="em">${k.emoji}</div>
+        <div class="info"><div><b class="d" style="font-size:16px">${k.name}</b> <small>Lv ${l}/${MAXSK}</small></div><small>${k.per}</small>
+          <div class="pips">${Array.from({length:MAXSK},(_,i)=>`<i class="${i<l?"on":""}"></i>`).join("")}</div></div>
+        <button class="pill press ${can?"brand":"off"}" data-act="skill" data-k="${k.id}" ${can?"":"disabled"}>${max?"MAX":"+1"}</button>
+      </div>`;}).join("")}
+    <div class="tip">Earn XP by tapping, buying, hiring, closing rounds and unlocking trophies.</div>
+  </div>`);
+}
+function drawTrophies(){
+  const ex = canExit();
+  setPanel("tab-trophies", `<div style="display:flex;flex-direction:column;gap:12px">
+    <div class="card center ${ex?"glow":""}">
+      <div class="d" style="font-size:21px;color:var(--gold)">🏝️ THE EXIT</div>
+      ${ex ? `<p style="margin:0">Sell ${esc(S.name)} and start over with ${starsOnExit()} new Reputation stars.</p>
+              <button class="pill goldbg big-btn press" data-act="exit">EXIT FOR ${starsOnExit()} ⭐️</button>`
+           : `<p class="dim" style="margin:0;font-size:13px">Ring the IPO bell to unlock your first exit. Each exit makes every future company grow faster.</p>
+              <small class="dim">Stars if you could exit now: ${starsOnExit()}</small>`}
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:6px">Career</div>
+      <div class="kv"><span>Best valuation</span><b>${money(S.best)}</b></div>
+      <div class="kv"><span>Lifetime revenue</span><b>${money(S.life)}</b></div>
+      <div class="kv"><span>Companies exited</span><b>${S.exits}</b></div>
+      <div class="kv"><span>Reputation stars</span><b>${S.stars} (+${S.stars*2}% revenue)</b></div>
+      <div class="kv"><span>Golden unicorns caught</span><b>${S.caught}</b></div>
+      <div class="kv"><span>Total taps</span><b>${S.taps}</b></div>
+    </div>
+    <div class="sect"><span class="eyebrow">Trophies</span><b style="font-size:13px">${S.ach.length}/${ACH.length}</b></div>
+    <div class="grid3">${ACH.map(a=>{ const u=S.ach.includes(a.id); return `
+      <div class="card ach ${u?"glow":"dimmed"}"><div class="em">${u?a.emoji:"🔒"}</div><b>${a.title}</b><small>${a.detail}</small></div>`;}).join("")}</div>
+  </div>`);
+}
+let flexSig = "";
+function drawFlex(){
+  const sig = [S.name,S.logo,S.lvl,S.rounds,S.streak,S.stars,S.exits,num(Math.max(valuation(),S.best))].join("|");
+  if (sig === flexSig) return; flexSig = sig;
+  $("tab-flex").innerHTML = `<div class="center" style="gap:16px">
+    <div class="d" style="font-size:23px">Flex your startup</div>
+    <div class="preview"><img alt="Your Founder Card" src="${cardURL()}"></div>
+    <button class="pill brand big-btn press" data-act="share">Share my Founder Card</button>
+    <small class="dim">Post it to your story and challenge a friend to beat your valuation.</small>
+  </div>`;
+}
+
+// ---------- Founder Card (rendered to canvas, 1080×1920 for stories) ----------
+function tier(v){ return v<1e7?["Bronze","🥉"]:v<1e9?["Silver","🥈"]:v<1e12?["Gold","🥇"]:v<1e15?["Diamond","💎"]:["Legend","👑"]; }
+function shareText(){
+  const v = Math.max(valuation(), S.best);
+  return `My startup ${S.name} ${S.logo} is worth ${money(v)} (${roundName()}). I'm a Level ${S.lvl} ${title()}. Think you can build a bigger one? #UnicornRush`;
+}
+function cardURL(){
+  const W=1080, H=1920, c=document.createElement("canvas"); c.width=W; c.height=H; const g=c.getContext("2d");
+  const bg=g.createLinearGradient(0,0,W,H); bg.addColorStop(0,"#8c5cff"); bg.addColorStop(.55,"#fa57e5"); bg.addColorStop(1,"#ffcc40");
+  g.fillStyle=bg; g.fillRect(0,0,W,H); g.fillStyle="rgba(0,0,0,.25)"; g.fillRect(0,0,W,H);
+  g.textAlign="center"; g.fillStyle="#fff";
+  const F = (s,w=700) => `${w} ${s}px Fredoka, "Arial Rounded MT Bold", system-ui, sans-serif`;
+  const fit = (txt, size, maxW, y, w) => { let s=size; do { g.font=F(s,w); s-=4; } while (g.measureText(txt).width>maxW && s>20); g.fillText(txt, W/2, y); };
+  const v = Math.max(valuation(), S.best), [tn,te] = tier(v), re = S.rounds===0?"🏚️":ROUNDS[S.rounds-1].emoji;
+  g.globalAlpha=.85; g.font=F(40); g.fillText("U N I C O R N   R U S H", W/2, 140); g.globalAlpha=1;
+  g.font="240px system-ui"; g.fillText(S.logo, W/2, 520);
+  fit(S.name||"Stealth Startup", 100, W-140, 680);
+  g.font=F(54,600); const rl=`${re} ${roundName()}`, rw=g.measureText(rl).width+80;
+  g.fillStyle="rgba(0,0,0,.3)"; g.beginPath(); g.roundRect((W-rw)/2, 720, rw, 90, 45); g.fill(); g.fillStyle="#fff"; g.fillText(rl, W/2, 785);
+  g.globalAlpha=.85; g.font=F(40); g.fillText("V A L U A T I O N", W/2, 1010); g.globalAlpha=1;
+  g.shadowColor="rgba(0,0,0,.3)"; g.shadowBlur=16; fit(money(v), 190, W-120, 1190); g.shadowBlur=0;
+  g.font=F(56,600); g.fillText(`${te} ${tn} Founder`, W/2, 1290);
+  [[`LV ${S.lvl}`, title()],[`🔥 ${S.streak}`,"day streak"],[`⭐️ ${S.stars}`,`${S.exits} exits`]].forEach(([a,b],k)=>{
+    const x = W/6 + k*W/3; g.font=F(60); g.fillText(a,x,1500); g.globalAlpha=.85; g.font=F(36,600); g.fillText(b,x,1555); g.globalAlpha=1;
+  });
+  g.font=F(66); g.fillText("Can you beat me?", W/2, 1740); g.globalAlpha=.85; g.font=F(40,600); g.fillText("#UnicornRush", W/2, 1810); g.globalAlpha=1;
+  return c.toDataURL("image/png");
+}
+
+// ---------- Modals, pitch, toasts ----------
+const Q = []; let modalOpen = false;
+function queue(item){ Q.push(item); if (!modalOpen) showNext(); }
+function showNext(){
+  const it = Q.shift(); if (!it) { modalOpen=false; return; }
+  modalOpen = true; let body;
+  if (it.type==="reward") body = `<div class="em">${it.em}</div><h2>${it.h}</h2><p>${it.p}</p><div class="amt">${money(it.amt)}</div><p style="font-size:12px">${it.f}</p>
+    <button class="pill goldbg big-btn press" data-act="close">COLLECT</button>`;
+  else if (it.type==="round") body = `<div class="em">${it.r.emoji}</div><h2 class="title-big">${it.r.name} CLOSED!</h2>
+    <p>${esc(S.name)} is now worth ${money(valuation())}. All revenue is permanently 2x.</p>
+    ${it.r.id===IPO?`<p style="color:var(--gold)">🏝️ You can now EXIT from the Trophies tab.</p>`:""}
+    <button class="pill brand big-btn press" data-act="share">Brag about it</button>
+    <button class="pill off big-btn press" data-act="close" style="color:var(--ink)">LET'S GO</button>`;
+  else if (it.type==="ach") body = `<div class="em">${it.a.emoji}</div><span class="eyebrow">Trophy unlocked</span><h2 style="color:var(--gold)">${it.a.title}</h2>
+    <p>${it.a.detail} · +${it.a.xp} XP</p><button class="pill brand big-btn press" data-act="close">LET'S GO</button>`;
+  else if (it.type==="exit") body = `<div class="em">🏝️</div><h2 style="color:var(--gold)">YOU EXITED!</h2>
+    <p>+${it.g} Reputation stars. Your next company grows faster. Time to build something even bigger.</p><button class="pill brand big-btn press" data-act="close">LET'S GO</button>`;
+  else if (it.type==="confirmExit") body = `<div class="em">🏝️</div><h2>Exit ${esc(S.name)}?</h2>
+    <p>You'll start a new company from the garage, but keep your founder level, skills, trophies and every star (+2% revenue each, forever).</p>
+    <div class="row2"><button class="pill off press" data-act="close" style="color:var(--ink)">Cancel</button><button class="pill goldbg press" data-act="doExit">Exit for ${starsOnExit()} ⭐️</button></div>`;
+  else if (it.type==="share") body = `<img class="share-img" alt="Your Founder Card" src="${cardURL()}">
+    <h2 style="font-size:22px">Post it to your story</h2><p>Press and hold the card, then tap <b>Save to Photos</b>. Add the caption below.</p>
+    <p id="capt" style="font-size:13px;color:var(--ink);-webkit-user-select:text;user-select:text">${esc(shareText())}</p>
+    <div class="row2"><button class="pill brand press" data-act="copy" id="copyBtn">Copy caption</button><button class="pill off press" data-act="close" style="color:var(--ink)">Done</button></div>`;
+  else if (it.type==="onboard") body = `<div class="em" id="obLogo">${S.logo}</div><h2>Every unicorn starts in a garage.</h2>
+    <p>Name your startup. You'll take it from a coffee machine to an IPO.</p>
+    <input id="obName" maxlength="24" placeholder="e.g. Pied Piper" autocomplete="off">
+    <div class="logos">${["🦄","🚀","🔥","💎","🧠","⚡️","🐙","🍕","🌮","🛸","🐉","🌈"].map(l=>`<button class="press ${l===S.logo?"on":""}" data-act="logo" data-l="${l}">${l}</button>`).join("")}</div>
+    <button class="pill brand big-btn press" data-act="found">FOUND MY COMPANY</button>`;
+  const L = document.createElement("div"); L.className="layer"; L.id="layer"; L.innerHTML = `<div class="modal">${body}</div>`;
+  document.body.appendChild(L);
+}
+function closeModal(){ const l=$("layer"); if (l) l.remove(); modalOpen=false; setTimeout(showNext, 200); }
+
+let pitch = null;
+function openPitch(){
+  const r = nextRound(); if (!r) return;
+  pitch = {start: performance.now(), hits:0, miss:0, zone:0, done:false};
+  const P = document.createElement("div"); P.className="pitch"; P.id="pitch";
+  P.innerHTML = `<button class="leave" data-act="leave">‹ Leave</button>
+    <h2 class="title-big">${r.emoji} ${r.name} PITCH</h2><div class="investor">🧐</div><div class="quote">${r.line}</div>
+    <div class="dots"><i></i><i></i><i></i></div><small class="dim" id="pStr"></small>
+    <div class="meter" id="meter"><div class="zone" id="zone"></div><div class="needle" id="needle"></div></div>
+    <div class="feedback" id="pFb">Tap when the needle is in the green zone</div>
+    <button class="goldbg go press" data-act="pitchTap">PITCH!</button>`;
+  document.body.appendChild(P);
+  pitch.zone = randZone(); placeZone(); pStrikes();
+}
+const randZone = () => { const h=zoneW()/2; return h + Math.random()*(1-2*h); };
+function placeZone(){ const z=$("zone"); z.style.left=((pitch.zone-zoneW()/2)*100)+"%"; z.style.width=(zoneW()*100)+"%"; }
+function pStrikes(){ $("pStr").textContent = `Strikes left: ${Math.max(0, missesAllowed()-pitch.miss)}`; }
+const needlePos = () => (Math.sin((performance.now()-pitch.start)/1000*needleSpeed())+1)/2;
+const HIT = ["🔥 Killer metric!","😮 They're leaning in...","🤝 Term sheet incoming!"], MISS = ["😬 Awkward silence...","🫠 “Who are your competitors?”","🥶 Someone checked their phone"];
+function pitchTap(){
+  if (!pitch || pitch.done) return;
+  if (Math.abs(needlePos()-pitch.zone) <= zoneW()/2) {
+    $("pFb").textContent = HIT[Math.min(pitch.hits,2)]; pitch.hits++;
+    document.querySelectorAll(".dots i").forEach((d,k)=>d.classList.toggle("on", k<pitch.hits));
+    if (pitch.hits>=3) endPitch(true); else { pitch.zone = randZone(); placeZone(); }
+  } else {
+    $("pFb").textContent = MISS[Math.min(pitch.miss,2)]; pitch.miss++; pStrikes();
+    const m=$("meter"); m.classList.remove("shake"); void m.offsetWidth; m.classList.add("shake");
+    if (pitch.miss > missesAllowed()) { $("pFb").textContent = "❌ They passed... for now."; endPitch(false); }
+  }
+}
+function endPitch(ok){ pitch.done = true; setTimeout(()=>{ $("pitch")?.remove(); pitch=null; finishPitch(ok); }, 900); }
+
+let toastT;
+function toast(msg){
+  document.querySelector(".toast")?.remove(); clearTimeout(toastT);
+  const t = document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t);
+  toastT = setTimeout(()=>t.remove(), 2300);
+}
+function confetti(){
+  const C = document.createElement("div"); C.className="confetti";
+  const E = ["🎉","✨","💸","🦄","⭐️","🚀"];
+  C.innerHTML = Array.from({length:40},(_,k)=>`<span style="left:${Math.random()*100}%;--dx:${(Math.random()*120-60).toFixed(0)}px;--r:${(Math.random()*720-360).toFixed(0)}deg;animation-duration:${(1.6+Math.random()*1.4).toFixed(2)}s;animation-delay:${(Math.random()*.5).toFixed(2)}s">${E[k%E.length]}</span>`).join("");
+  document.body.appendChild(C); setTimeout(()=>C.remove(), 3600);
+}
+function drawUnicorn(){
+  let u = $("uni");
+  if (!unicorn) { if (u) u.remove(); return; }
+  if (!u) { u = document.createElement("button"); u.id="uni"; u.className="unicorn"; u.dataset.act="unicorn"; u.textContent="🦄"; u.setAttribute("aria-label","Catch the golden unicorn"); document.body.appendChild(u); }
+  u.style.left = (unicorn.x*100)+"vw"; u.style.top = (unicorn.y*100)+"vh";
+}
+
+// ---------- Input ----------
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-act]"); if (!t) return;
+  const i = +t.dataset.i, a = t.dataset.act;
+  if (a==="tap") tapSt(i);
+  else if (a==="buy") buy(i);
+  else if (a==="hire") hire(i);
+  else if (a==="mode") { buyMode = t.dataset.m; drawModes(); }
+  else if (a==="pitch") openPitch();
+  else if (a==="pitchTap") pitchTap();
+  else if (a==="leave") { $("pitch")?.remove(); pitch=null; }
+  else if (a==="unicorn") catchUnicorn();
+  else if (a==="skill") upgrade(t.dataset.k);
+  else if (a==="exit") queue({type:"confirmExit"});
+  else if (a==="doExit") { closeModal(); exitCompany(); }
+  else if (a==="share") { $("layer")?.remove(); Q.unshift({type:"share"}); showNext(); }
+  else if (a==="copy") {
+    const txt = shareText(), btn = $("copyBtn");
+    const done = ok => { btn.textContent = ok ? "Copied ✓" : "Select the caption above"; if (!ok) { const r=document.createRange(); r.selectNodeContents($("capt")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); } };
+    try { navigator.clipboard.writeText(txt).then(()=>done(true), ()=>done(false)); } catch(err) { done(false); }
+  }
+  else if (a==="close") closeModal();
+  else if (a==="logo") { S.logo = t.dataset.l; $("obLogo").textContent = S.logo; document.querySelectorAll(".logos button").forEach(b=>b.classList.toggle("on", b===t)); }
+  else if (a==="found") {
+    const n = ($("obName").value||"").trim(); S.name = n ? n.slice(0,24) : "Stealth Startup"; S.onboarded = true;
+    daily(true); nextUnicorn = Date.now()+45000; save(); closeModal();
+  }
+  else if (a==="tab") { tab = t.dataset.tab; showTab(); }
+});
+document.addEventListener("keydown", e=>{ if (e.key==="Enter" && $("obName") && document.activeElement===$("obName")) document.querySelector('[data-act="found"]').click(); });
+function showTab(){
+  ["office","founder","trophies","flex"].forEach(n=>{ $("tab-"+n).hidden = n!==tab; });
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on", b.dataset.tab===tab));
+  if (tab==="flex") flexSig=""; window.scrollTo(0,0); render();
+}
+function render(){
+  if (tab==="office") drawOffice(); else if (tab==="founder") drawFounder(); else if (tab==="trophies") drawTrophies(); else drawFlex();
+  $("tBadge").hidden = S.sp<=0; $("tBadge").textContent = S.sp;
+  drawUnicorn();
+}
+
+// ---------- Loop ----------
+let last = performance.now(), saveClock = 0, achClock = 0, slowClock = 0;
+function frame(now){
+  const dt = Math.min((now-last)/1000, 1); last = now;
+  if (S.onboarded) {
+    advance(dt);
+    if (unicorn && Date.now()>unicorn.until) unicorn = null;
+    if (!unicorn && Date.now()>nextUnicorn && !pitch) { unicorn = {x:.15+Math.random()*.7, y:.25+Math.random()*.5, until:Date.now()+8000}; nextUnicorn = Date.now()+60000+Math.random()*90000; }
+    saveClock += dt; if (saveClock>5) { saveClock=0; save(); }
+    achClock += dt; if (achClock>1) { achClock=0; checkAch(); }
+  }
+  slowClock += dt;
+  if (tab==="office" || slowClock>0.5) { slowClock=0; render(); }
+  if (pitch && !pitch.done) $("needle").style.left = (needlePos()*100)+"%";
+  requestAnimationFrame(frame);
+}
+document.addEventListener("visibilitychange", ()=>{
+  if (document.hidden) save(); else { last = performance.now(); offline(); daily(); }
+});
+
+function start(data){
+  if (data && data.S) S = Object.assign(fresh(), data.S);
+  if (S.st.length < ST.length) S.st = S.st.concat(freshStations().slice(S.st.length).map(x=>({...x,n:0})));
+  drawModes(); render();
+  if (!S.onboarded) queue({type:"onboard"}); else { offline(); daily(); }
+  requestAnimationFrame(frame);
+}
+window.claude?.hot?.snapshot?.(() => ({S}));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>

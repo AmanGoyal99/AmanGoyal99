@@ -45,7 +45,13 @@ early reason to share. All the numbers are in `UnicornRush/Model/GameData.swift`
 
 ---
 
-## Running it
+## Play it now on your iPhone (web version)
+
+`web/index.html` is a single-file port of the whole game (same economy, pitch, skills, trophies,
+Exit, streaks, offline earnings and Founder Card). Open it in Safari on your iPhone, tap **Share →
+Add to Home Screen**, and it launches full-screen like an app. Progress is saved in that browser.
+
+## Running the native app
 
 You need a Mac with **Xcode 16+**. The project is generated with
 [XcodeGen](https://github.com/yonaskolb/XcodeGen), so no `.xcodeproj` merge conflicts.
